@@ -1,0 +1,1 @@
+- [Flutter Android validation](flutter-android-sdk.md) — this workspace has Flutter/Dart but no Android SDK; validate mobile UI via web, analyzer, and tests.
