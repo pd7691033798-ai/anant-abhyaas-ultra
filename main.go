@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -42,28 +43,61 @@ type CodeVerificationRequest struct {
 	CodeSource string `json:"code_source"`
 }
 
+// Directive #30 के स्वायत्त उपचार और क्वारंटीन रिकॉर्ड
+type RemediationEvent struct {
+	ID                  int       `json:"id"`
+	Timestamp           time.Time `json:"timestamp"`
+	Trigger             string    `json:"trigger"`
+	Details             string    `json:"details"`
+	Action              string    `json:"action"`
+	Result              string    `json:"result"`
+	RestoredGenesisHash string    `json:"restored_genesis_hash"`
+	MemoryUsageMB       float64   `json:"memory_usage_mb"`
+	GoroutineCount      int       `json:"goroutine_count"`
+}
+
+type QuarantinedThreat struct {
+	ID        int       `json:"id"`
+	Timestamp time.Time `json:"timestamp"`
+	Reason    string    `json:"reason"`
+	Status    string    `json:"status"`
+}
+
 // मास्टर सिस्टम स्टेट (Master Engine State)
 type AnantAbhyaasUltra struct {
 	sync.Mutex
-	BlockchainLedger []AuditBlock      `json:"ledger"`
-	Directives       []Directive       `json:"directives"`
-	PendingApproval  map[string]string `json:"pending_approval"`
-	SystemHealth     string            `json:"system_health"`
-	AdminMasterKey   string            `json:"-"`
-	SystemLock       bool              `json:"system_lock"`
-	ActiveWorkers    int               `json:"active_workers"`
-	TotalTasksRun    int               `json:"total_tasks_run"`
+	BlockchainLedger      []AuditBlock        `json:"ledger"`
+	Directives            []Directive         `json:"directives"`
+	PendingApproval       map[string]string   `json:"pending_approval"`
+	SystemHealth          string              `json:"system_health"`
+	AdminMasterKey        string              `json:"-"`
+	SystemLock            bool                `json:"system_lock"`
+	ActiveWorkers         int                 `json:"active_workers"`
+	TotalTasksRun         int                 `json:"total_tasks_run"`
+	TrustedGenesis        AuditBlock          `json:"-"`
+	BlockchainIntegrity   string              `json:"blockchain_integrity"`
+	AutonomousMonitorLive bool                `json:"autonomous_monitor_active"`
+	MonitorChecks         uint64              `json:"monitor_checks"`
+	LastHealthCheck       time.Time           `json:"last_health_check"`
+	MemoryUsageBytes      uint64              `json:"memory_usage_bytes"`
+	MemoryUsageMB         float64             `json:"memory_usage_mb"`
+	GoroutineCount        int                 `json:"goroutine_count"`
+	RemediationLogs       []RemediationEvent  `json:"remediation_logs"`
+	QuarantinedThreats    []QuarantinedThreat `json:"quarantined_threats"`
 }
 
 // ग्लोबल इंजन स्टेट (आपकी 256-बिट मास्टर की सहित)
 var engine = &AnantAbhyaasUltra{
-	BlockchainLedger: make([]AuditBlock, 0),
-	PendingApproval:  make(map[string]string),
-	SystemHealth:     "OPERATIONAL_ULTRA_100_PERCENT",
-	AdminMasterKey:   "ANANT#ULTRA@2026$MASTER%KEY!99X", // 256-बिट मास्टर की
-	SystemLock:       false,
-	ActiveWorkers:    0,
-	TotalTasksRun:    0,
+	BlockchainLedger:    make([]AuditBlock, 0),
+	PendingApproval:     make(map[string]string),
+	SystemHealth:        "OPERATIONAL_ULTRA_100_PERCENT",
+	AdminMasterKey:      "ANANT#ULTRA@2026$MASTER%KEY!99X", // 256-बिट मास्टर की
+	SystemLock:          false,
+	ActiveWorkers:       0,
+	TotalTasksRun:       0,
+	BlockchainIntegrity: "UNINITIALIZED",
+	RemediationLogs:     make([]RemediationEvent, 0),
+	QuarantinedThreats:  make([]QuarantinedThreat, 0),
 }
 
 // ==========================================
@@ -77,10 +111,7 @@ func calculateHash(index int, timestamp string, data string, prevHash string) st
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func (app *AnantAbhyaasUltra) AddAuditLog(data string) AuditBlock {
-	app.Lock()
-	defer app.Unlock()
-
+func (app *AnantAbhyaasUltra) appendAuditLogLocked(data string) AuditBlock {
 	var prevHash string
 	index := len(app.BlockchainLedger)
 	if index > 0 {
@@ -104,6 +135,159 @@ func (app *AnantAbhyaasUltra) AddAuditLog(data string) AuditBlock {
 	app.BlockchainLedger = append(app.BlockchainLedger, block)
 	app.TotalTasksRun++
 	return block
+}
+
+func (app *AnantAbhyaasUltra) AddAuditLog(data string) AuditBlock {
+	app.Lock()
+	defer app.Unlock()
+	return app.appendAuditLogLocked(data)
+}
+
+// सत्यापित जेनेसिस ब्लॉक से पूरी लेज़र कड़ी की जाँच
+func (app *AnantAbhyaasUltra) validateBlockchainLocked() (bool, string) {
+	if len(app.BlockchainLedger) == 0 {
+		return false, "BLOCKCHAIN_EMPTY"
+	}
+
+	genesis := app.BlockchainLedger[0]
+	trusted := app.TrustedGenesis
+	if trusted.Hash == "" {
+		return false, "TRUSTED_GENESIS_UNINITIALIZED"
+	}
+	if genesis.Index != trusted.Index ||
+		!genesis.Timestamp.Equal(trusted.Timestamp) ||
+		genesis.ActivityData != trusted.ActivityData ||
+		genesis.PrevHash != trusted.PrevHash ||
+		genesis.Hash != trusted.Hash {
+		return false, "GENESIS_BLOCK_CHANGED"
+	}
+
+	for index, block := range app.BlockchainLedger {
+		if block.Index != index {
+			return false, fmt.Sprintf("BLOCK_INDEX_MISMATCH_AT_%d", index)
+		}
+		if index > 0 && block.PrevHash != app.BlockchainLedger[index-1].Hash {
+			return false, fmt.Sprintf("PREVIOUS_HASH_MISMATCH_AT_%d", index)
+		}
+
+		expectedHash := calculateHash(
+			block.Index,
+			block.Timestamp.Format(time.RFC3339),
+			block.ActivityData,
+			block.PrevHash,
+		)
+		if block.Hash != expectedHash {
+			return false, fmt.Sprintf("BLOCK_HASH_MISMATCH_AT_%d", index)
+		}
+	}
+
+	return true, "BLOCKCHAIN_INTEGRITY_VERIFIED"
+}
+
+// Directive #30: हर पाँच सेकंड में स्वास्थ्य और लेज़र की स्वायत्त निगरानी
+func (app *AnantAbhyaasUltra) StartAutonomousMonitor(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	app.runAutonomousHealthCheck()
+	for range ticker.C {
+		app.runAutonomousHealthCheck()
+	}
+}
+
+func (app *AnantAbhyaasUltra) runAutonomousHealthCheck() {
+	var memory runtime.MemStats
+	runtime.ReadMemStats(&memory)
+
+	const maxHeapUsageBytes = 512 * 1024 * 1024
+	const maxGoroutineCount = 1000
+
+	now := time.Now().UTC()
+	memoryUsageMB := float64(memory.HeapAlloc) / (1024 * 1024)
+	goroutineCount := runtime.NumGoroutine()
+
+	app.Lock()
+	defer app.Unlock()
+
+	app.MonitorChecks++
+	app.LastHealthCheck = now
+	app.MemoryUsageBytes = memory.HeapAlloc
+	app.MemoryUsageMB = memoryUsageMB
+	app.GoroutineCount = goroutineCount
+
+	integrityOK, integrityStatus := app.validateBlockchainLocked()
+	memoryOK := memory.HeapAlloc <= maxHeapUsageBytes
+	goroutinesOK := goroutineCount <= maxGoroutineCount
+	if integrityOK && memoryOK && goroutinesOK {
+		app.BlockchainIntegrity = integrityStatus
+		app.SystemHealth = "OPERATIONAL_ULTRA_100_PERCENT"
+		return
+	}
+
+	anomalies := make([]string, 0, 3)
+	if !integrityOK {
+		anomalies = append(anomalies, integrityStatus)
+	}
+	if !memoryOK {
+		anomalies = append(anomalies, "MEMORY_PRESSURE")
+	}
+	if !goroutinesOK {
+		anomalies = append(anomalies, "GOROUTINE_PRESSURE")
+	}
+
+	app.remediateAnomalyLocked(strings.Join(anomalies, ", "), !integrityOK)
+}
+
+func (app *AnantAbhyaasUltra) remediateAnomalyLocked(reason string, restoreLedger bool) {
+	now := time.Now().UTC()
+	threatID := len(app.QuarantinedThreats) + 1
+	app.QuarantinedThreats = append(app.QuarantinedThreats, QuarantinedThreat{
+		ID:        threatID,
+		Timestamp: now,
+		Reason:    reason,
+		Status:    "QUARANTINED",
+	})
+
+	restoredHash := ""
+	if restoreLedger {
+		restoredHash = app.TrustedGenesis.Hash
+		if restoredHash != "" {
+			app.BlockchainLedger = []AuditBlock{app.TrustedGenesis}
+			app.BlockchainIntegrity = "RESTORED_FROM_TRUSTED_GENESIS"
+		} else {
+			app.BlockchainIntegrity = "RESTORATION_UNAVAILABLE"
+		}
+	} else {
+		runtime.GC()
+	}
+	app.SystemHealth = "AUTO_HEALED_THREAT_QUARANTINED"
+
+	action := "QUARANTINED_THREAT_AND_TRIGGERED_RESOURCE_REMEDIATION"
+	result := "RESOURCE_PRESSURE_MITIGATED"
+	if restoreLedger {
+		action = "QUARANTINED_THREAT_AND_RESTORED_LAST_VALID_GENESIS"
+		result = app.BlockchainIntegrity
+	}
+	event := RemediationEvent{
+		ID:                  len(app.RemediationLogs) + 1,
+		Timestamp:           now,
+		Trigger:             "DIRECTIVE_30_AUTONOMOUS_MONITOR",
+		Details:             reason,
+		Action:              action,
+		Result:              result,
+		RestoredGenesisHash: restoredHash,
+		MemoryUsageMB:       app.MemoryUsageMB,
+		GoroutineCount:      app.GoroutineCount,
+	}
+	app.RemediationLogs = append(app.RemediationLogs, event)
+
+	if restoreLedger && restoredHash != "" {
+		app.appendAuditLogLocked(fmt.Sprintf(
+			"AUTO-REMEDIATION: %s | Threat #%d quarantined",
+			reason,
+			threatID,
+		))
+	}
 }
 
 // ==========================================
@@ -334,7 +518,14 @@ func adminHandshakeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	engine.Lock()
+	if len(engine.BlockchainLedger) == 0 {
+		engine.Unlock()
+		http.Error(w, "Genesis block unavailable", http.StatusServiceUnavailable)
+		return
+	}
 	genesisHash := engine.BlockchainLedger[0].Hash
+	engine.Unlock()
 	authBlock := engine.AddAuditLog("AUTH_SUCCESS: Admin Logged In via Master Token")
 
 	w.Header().Set("Content-Type", "application/json")
@@ -444,6 +635,58 @@ func apiLogsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(engine.BlockchainLedger)
 }
 
+func remediationStatusHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if r.Header.Get("X-Admin-Master-Key") != engine.AdminMasterKey {
+		engine.AddAuditLog("SECURITY_ALERT: Unauthorized Remediation Status Request")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "ACCESS_DENIED",
+			"error":  "Admin Master Key Required",
+		})
+		return
+	}
+
+	engine.Lock()
+	quarantinedThreats := make([]QuarantinedThreat, len(engine.QuarantinedThreats))
+	copy(quarantinedThreats, engine.QuarantinedThreats)
+	remediationLogs := make([]RemediationEvent, len(engine.RemediationLogs))
+	copy(remediationLogs, engine.RemediationLogs)
+	response := struct {
+		Directive           string              `json:"directive"`
+		MonitorActive       bool                `json:"monitor_active"`
+		MonitorInterval     string              `json:"monitor_interval"`
+		MonitorChecks       uint64              `json:"monitor_checks"`
+		LastHealthCheck     time.Time           `json:"last_health_check"`
+		SystemHealth        string              `json:"system_health"`
+		BlockchainIntegrity string              `json:"blockchain_integrity"`
+		MemoryUsageMB       float64             `json:"memory_usage_mb"`
+		GoroutineCount      int                 `json:"goroutine_count"`
+		QuarantinedThreats  []QuarantinedThreat `json:"quarantined_threats"`
+		RemediationLogs     []RemediationEvent  `json:"remediation_logs"`
+	}{
+		Directive:           "30_INCIDENT_RESPONSE_AND_AUTO_REMEDIATION",
+		MonitorActive:       engine.AutonomousMonitorLive,
+		MonitorInterval:     "5s",
+		MonitorChecks:       engine.MonitorChecks,
+		LastHealthCheck:     engine.LastHealthCheck,
+		SystemHealth:        engine.SystemHealth,
+		BlockchainIntegrity: engine.BlockchainIntegrity,
+		MemoryUsageMB:       engine.MemoryUsageMB,
+		GoroutineCount:      engine.GoroutineCount,
+		QuarantinedThreats:  quarantinedThreats,
+		RemediationLogs:     remediationLogs,
+	}
+	engine.Unlock()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
 // ==========================================
 // 7. सर्वर इनिशियलाइज़ेशन व मेन फ़ंक्शन
 // ==========================================
@@ -454,6 +697,11 @@ func main() {
 
 	// जेनेसिस ब्लॉक
 	engine.AddAuditLog("GENESIS: Anant Abhyaas Ultra System Initialized with 39 Master Directives")
+	engine.Lock()
+	engine.TrustedGenesis = engine.BlockchainLedger[0]
+	engine.BlockchainIntegrity = "BLOCKCHAIN_INTEGRITY_VERIFIED"
+	engine.AutonomousMonitorLive = true
+	engine.Unlock()
 
 	// क्लाउड कंप्यूटिंग टास्क
 	cloudTasks := []string{
@@ -472,6 +720,7 @@ func main() {
 	http.HandleFunc("/api/directives", apiDirectivesHandler)
 	http.HandleFunc("/api/logs", apiLogsHandler)
 	http.HandleFunc("/api/admin/handshake", adminHandshakeHandler)
+	http.HandleFunc("/api/admin/remediation-status", remediationStatusHandler)
 	http.HandleFunc("/api/verify-code", verifyCodeHandler)
 	http.HandleFunc("/api/admin/approve", adminApproveHandler)
 	http.HandleFunc("/api/admin/emergency-reset", emergencyRecoveryHandler)
@@ -480,6 +729,8 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+
+	go engine.StartAutonomousMonitor(5 * time.Second)
 
 	log.Printf("🌐 'अनंत अभ्यास अल्ट्रा' मास्टर सर्वर http://0.0.0.0:%s पर सक्रिय है...\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
