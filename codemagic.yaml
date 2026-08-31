@@ -1,0 +1,18 @@
+workflows:
+  default-workflow:
+    name: Anant Abhyaas Android Build
+    instance_type: mac_mini_m1
+    environment:
+      groups:
+        - credentials
+      flutter: stable
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      - name: Build Android APK
+        script: |
+          flutter build apk --release
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
+      
