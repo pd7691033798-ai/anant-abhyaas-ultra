@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Directive40Engine सभी 7-पॉइंट्स और डिकॉय पर्ज का मास्टर इंजन है
+// Directive40Engine सभी 7-पॉइंट्स, डिकॉय पर्ज और रिकवरी का मास्टर इंजन है
 type Directive40Engine struct {
 	ActiveState bool
 	VaultLocked bool
@@ -55,4 +55,19 @@ func (d *Directive40Engine) ExecuteDecoyWipe() {
 	fmt.Println("[DECOY STATUS] Outer layer wiped to zero. Hidden vault remains safely intact.")
 	d.VaultLocked = true
 }
-इसकी जगह या तो एक खास बायोमेट्रिक पैटर्न (जैसे फिंगरप्रिंट का एक खास गेस्चर) या एक क्रिप्टोग्राफिक रिकवरी की (Master Recovery Phrase) होती है, जिसे केवल आप जानते हैं।
+
+// [रिकवरी फंक्शन] हिडन वॉल्ट को दोबारा रिकवर करने का मेकैनिज्म
+func (d *Directive40Engine) RestoreHiddenVault(masterRecoveryKey string) bool {
+	// आपकी गुप्त मास्टर की यहाँ जाँची जाती है
+	expectedSecretKey := "ANANT_ULTRA_MASTER_GENESIS_2026" 
+
+	if masterRecoveryKey == expectedSecretKey {
+		d.VaultLocked = false
+		d.ActiveState = true
+		fmt.Println("[RECOVERY SUCCESS] Secret Genesis Handshake verified. Hidden vault restored successfully!")
+		return true
+	}
+
+	fmt.Println("[RECOVERY FAILED] Invalid security key. System remains locked in decoy state.")
+	return false
+}
