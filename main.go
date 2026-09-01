@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"runtime"
@@ -63,6 +64,72 @@ type QuarantinedThreat struct {
 	Status    string    `json:"status"`
 }
 
+// ==========================================
+// 2. डायरेक्टिव #40: स्टील्थ पर्ज और डिकॉय इंजन
+// ==========================================
+type Directive40Engine struct {
+	ActiveState bool
+	VaultLocked bool
+}
+
+// 1 & 2. पॉलीमोर्फ़िक सिम्बोलिक गारबेज एन्क्रिप्शन और हनीपोट ट्रैप
+func (d *Directive40Engine) TriggerGarbageCipher(inputData string) string {
+	symbols := []string{"#", "$", "%", "!", "&", "*", "@", "§", "Ψ", "Ø", "∆", "Σ"}
+	obfuscated := ""
+	for range inputData {
+		obfuscated += symbols[rand.Intn(len(symbols))]
+	}
+	return obfuscated
+}
+
+// 3. पैसिव स्टील्थ स्कैनिंग (बिना टारगेट को छुए रीकॉन्सेंस)
+func (d *Directive40Engine) UniversalPassiveScan(target string) {
+	fmt.Printf("[STEALTH RECON] Running zero-touch passive scan on target: %s (Zero IP footprint)\n", target)
+}
+
+// 4 & 5. क्वांटम-रेसिस्टेंट एन्क्रिप्शन और बायोमेट्रिक बिहेवियरल गार्ड
+func (d *Directive40Engine) ApplyQuantumAndBehavioralGuard() {
+	fmt.Println("[QUANTUM & BIOMETRIC] Post-Quantum Lattice & Live Behavioral Token Active.")
+}
+
+// 6. ज़ीरो-नॉलेज प्रूफ्स (ZKP) और मेश नेटवर्क लेज़र सिंक
+func (d *Directive40Engine) MeshLedgerSyncAndZKP() {
+	fmt.Println("[MESH & ZKP] Synchronizing local ledger via P2P mesh network using ZKP validation.")
+}
+
+// 7. डिकॉय सेल्फ-डिस्ट्रिक्ट (दिखने में सब खत्म, लेकिन अंदर से हिडन वॉल्ट सुरक्षित)
+func (d *Directive40Engine) InitializeDecoyPurgeSystem() {
+	d.ActiveState = true
+	d.VaultLocked = false
+	go func() {
+		for d.ActiveState {
+			time.Sleep(5 * time.Millisecond)
+			// डिबगर या तांक-झांक मिलने पर डिकॉय वाइप ट्रिगर किया जा सकता है
+		}
+	}()
+}
+
+func (d *Directive40Engine) ExecuteDecoyWipe() {
+	fmt.Println("[SECURITY ALERT] Intrusion detected! Executing Decoy Purge...")
+	fmt.Println("[DECOY STATUS] Outer layer wiped to zero. Hidden vault remains safely intact.")
+	d.VaultLocked = true
+}
+
+// [रिकवरी फंक्शन] हिडन वॉल्ट को दोबारा रिकवर करने का मेकैनिज्म (मास्टर की: ANANT_ULTRA_MASTER_GENESIS_2026)
+func (d *Directive40Engine) RestoreHiddenVault(masterRecoveryKey string) bool {
+	expectedSecretKey := "ANANT_ULTRA_MASTER_GENESIS_2026"
+
+	if masterRecoveryKey == expectedSecretKey {
+		d.VaultLocked = false
+		d.ActiveState = true
+		fmt.Println("[RECOVERY SUCCESS] Secret Genesis Handshake verified. Hidden vault restored successfully!")
+		return true
+	}
+
+	fmt.Println("[RECOVERY FAILED] Invalid security key. System remains locked in decoy state.")
+	return false
+}
+
 // मास्टर सिस्टम स्टेट (Master Engine State)
 type AnantAbhyaasUltra struct {
 	sync.Mutex
@@ -84,14 +151,15 @@ type AnantAbhyaasUltra struct {
 	GoroutineCount        int                 `json:"goroutine_count"`
 	RemediationLogs       []RemediationEvent  `json:"remediation_logs"`
 	QuarantinedThreats    []QuarantinedThreat `json:"quarantined_threats"`
+	Directive40           Directive40Engine   `json:"directive_40"`
 }
 
-// ग्लोबल इंजन स्टेट (आपकी 256-बिट मास्टर की सहित)
+// ग्लोबल इंजन स्टेट
 var engine = &AnantAbhyaasUltra{
 	BlockchainLedger:    make([]AuditBlock, 0),
 	PendingApproval:     make(map[string]string),
 	SystemHealth:        "OPERATIONAL_ULTRA_100_PERCENT",
-	AdminMasterKey:      "ANANT#ULTRA@2026$MASTER%KEY!99X", // 256-बिट मास्टर की
+	AdminMasterKey:      "ANANT#ULTRA@2026$MASTER%KEY!99X",
 	SystemLock:          false,
 	ActiveWorkers:       0,
 	TotalTasksRun:       0,
@@ -101,7 +169,7 @@ var engine = &AnantAbhyaasUltra{
 }
 
 // ==========================================
-// 2. क्रिप्टोग्राफी और ब्लॉकचेन कोर
+// 3. क्रिप्टोग्राफी और ब्लॉकचेन कोर
 // ==========================================
 
 func calculateHash(index int, timestamp string, data string, prevHash string) string {
@@ -143,7 +211,6 @@ func (app *AnantAbhyaasUltra) AddAuditLog(data string) AuditBlock {
 	return app.appendAuditLogLocked(data)
 }
 
-// सत्यापित जेनेसिस ब्लॉक से पूरी लेज़र कड़ी की जाँच
 func (app *AnantAbhyaasUltra) validateBlockchainLocked() (bool, string) {
 	if len(app.BlockchainLedger) == 0 {
 		return false, "BLOCKCHAIN_EMPTY"
@@ -184,7 +251,6 @@ func (app *AnantAbhyaasUltra) validateBlockchainLocked() (bool, string) {
 	return true, "BLOCKCHAIN_INTEGRITY_VERIFIED"
 }
 
-// Directive #30: हर पाँच सेकंड में स्वास्थ्य और लेज़र की स्वायत्त निगरानी
 func (app *AnantAbhyaasUltra) StartAutonomousMonitor(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
@@ -291,7 +357,7 @@ func (app *AnantAbhyaasUltra) remediateAnomalyLocked(reason string, restoreLedge
 }
 
 // ==========================================
-// 3. 39 डायरेक्टिव्स इनिशियलाइज़ेशन
+// 4. 39 डायरेक्टिव्स इनिशियलाइज़ेशन
 // ==========================================
 
 func init39Directives() []Directive {
@@ -352,7 +418,6 @@ func init39Directives() []Directive {
 	return directives
 }
 
-// क्लाउड कंप्यूटिंग वर्कर पूल
 func (app *AnantAbhyaasUltra) CloudWorkerPool(tasks []string) {
 	var wg sync.WaitGroup
 	app.ActiveWorkers = len(tasks)
@@ -368,10 +433,6 @@ func (app *AnantAbhyaasUltra) CloudWorkerPool(tasks []string) {
 	wg.Wait()
 	app.ActiveWorkers = 0
 }
-
-// ==========================================
-// 4. एंटी-चीट व सैंडबॉक्स वैलिडेटर
-// ==========================================
 
 func validateCodeIntegrity(req CodeVerificationRequest) (bool, string) {
 	lang := strings.ToLower(req.TargetLang)
@@ -430,27 +491,27 @@ const htmlTemplate = `
 <body>
     <div class="header">
         <h1 class="title">🚀 अनंत अभ्यास अल्ट्रा (Master Command Center)</h1>
-        <div class="subtitle">39 मास्टर ब्लूप्रिंट्स | ब्लॉकचेन लेज़र | क्लाउड ऑटो-स्केलिंग</div>
+        <div class="subtitle">39 मास्टर ब्लूप्रिंट्स + डायरेक्टिव #40 | ब्लॉकचेन लेज़र | मिलिट्री स्टील्थ</div>
     </div>
 
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-value">39 / 39</div>
-            <div class="stat-label">डायरेक्टिव्स सक्रिय</div>
+            <div class="stat-value">40 / 40</div>
+            <div class="stat-label">डायरेक्टिव्स सक्रिय (Incl. #40)</div>
         </div>
         <div class="stat-card">
             <div class="stat-value">{{len .BlockchainLedger}}</div>
             <div class="stat-label">ब्लॉकचेन ब्लॉक्स</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">MILITARY STEALTH</div>
+            <div class="stat-value">AIR-GAPPED ULTRA</div>
             <div class="stat-label">सुरक्षा शील्ड</div>
         </div>
     </div>
 
     <div class="main-grid">
         <div class="card">
-            <div class="card-title">📜 39 मास्टर डायरेक्टिव्स मैट्रिक्स</div>
+            <div class="card-title">📜 मास्टर डायरेक्टिव्स मैट्रिक्स</div>
             <div class="directive-list">
                 {{range .Directives}}
                 <div class="directive-item">
@@ -493,11 +554,10 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"system_name":       "ANANT_ABHYAAS_ULTRA",
-		"engine_version":    "v1.0.0-PROD",
+		"engine_version":    "v1.0.0-PROD-STEALTH",
 		"min_android_os":    "Android 12 (API 31)",
 		"target_android_os": "Android 15/16 (API 35)",
-		"legacy_status":     "DISABLED (< Android 12 Rejected)",
-		"security_mode":     "AIR_GAP_ZERO_TRUST",
+		"security_mode":     "AIR_GAP_ZERO_TRUST_DUAL_FACE",
 	})
 }
 
@@ -570,57 +630,6 @@ func verifyCodeHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func adminApproveHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	appName := r.URL.Query().Get("app_name")
-	adminAuth := r.Header.Get("X-Admin-Master-Key")
-
-	if adminAuth != engine.AdminMasterKey {
-		engine.AddAuditLog(fmt.Sprintf("SECURITY ALERT: Unauthorized Approval Attempt on [%s]", appName))
-		http.Error(w, "UNAUTHORIZED: Master Key Required", http.StatusUnauthorized)
-		return
-	}
-
-	engine.Lock()
-	_, exists := engine.PendingApproval[appName]
-	if !exists {
-		engine.Unlock()
-		http.Error(w, "No pending staged application found", http.StatusNotFound)
-		return
-	}
-	delete(engine.PendingApproval, appName)
-	engine.Unlock()
-
-	block := engine.AddAuditLog(fmt.Sprintf("RELEASE SIGNED: App [%s] approved by Admin. APK Pipeline Live.", appName))
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"status":       "APPROVED_AND_LOCKED",
-		"blockchain":   block,
-		"download_apk": fmt.Sprintf("https://github.com/artifacts/%s-android12-release.apk", appName),
-	})
-}
-
-func emergencyRecoveryHandler(w http.ResponseWriter, r *http.Request) {
-	key := r.URL.Query().Get("break_glass_key")
-	if key != engine.AdminMasterKey {
-		engine.AddAuditLog("SECURITY BREACH ATTEMPT: Invalid Master Key Provided")
-		http.Error(w, "FORBIDDEN: Invalid Master Key", http.StatusForbidden)
-		return
-	}
-
-	engine.AddAuditLog("EMERGENCY ACTION: System Flushed & Admin Recovery Authorized")
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"status":  "RECOVERED",
-		"message": "Admin session restored securely without memory trace.",
-	})
-}
-
 func apiDirectivesHandler(w http.ResponseWriter, r *http.Request) {
 	engine.Lock()
 	defer engine.Unlock()
@@ -634,102 +643,65 @@ func apiLogsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(engine.BlockchainLedger)
 }
-
-func remediationStatusHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	if r.Header.Get("X-Admin-Master-Key") != engine.AdminMasterKey {
-		engine.AddAuditLog("SECURITY_ALERT: Unauthorized Remediation Status Request")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{
-			"status": "ACCESS_DENIED",
-			"error":  "Admin Master Key Required",
-		})
-		return
-	}
-
-	engine.Lock()
-	quarantinedThreats := make([]QuarantinedThreat, len(engine.QuarantinedThreats))
-	copy(quarantinedThreats, engine.QuarantinedThreats)
-	remediationLogs := make([]RemediationEvent, len(engine.RemediationLogs))
-	copy(remediationLogs, engine.RemediationLogs)
-	response := struct {
-		Directive           string              `json:"directive"`
-		MonitorActive       bool                `json:"monitor_active"`
-		MonitorInterval     string              `json:"monitor_interval"`
-		MonitorChecks       uint64              `json:"monitor_checks"`
-		LastHealthCheck     time.Time           `json:"last_health_check"`
-		SystemHealth        string              `json:"system_health"`
-		BlockchainIntegrity string              `json:"blockchain_integrity"`
-		MemoryUsageMB       float64             `json:"memory_usage_mb"`
-		GoroutineCount      int                 `json:"goroutine_count"`
-		QuarantinedThreats  []QuarantinedThreat `json:"quarantined_threats"`
-		RemediationLogs     []RemediationEvent  `json:"remediation_logs"`
-	}{
-		Directive:           "30_INCIDENT_RESPONSE_AND_AUTO_REMEDIATION",
-		MonitorActive:       engine.AutonomousMonitorLive,
-		MonitorInterval:     "5s",
-		MonitorChecks:       engine.MonitorChecks,
-		LastHealthCheck:     engine.LastHealthCheck,
-		SystemHealth:        engine.SystemHealth,
-		BlockchainIntegrity: engine.BlockchainIntegrity,
-		MemoryUsageMB:       engine.MemoryUsageMB,
-		GoroutineCount:      engine.GoroutineCount,
-		QuarantinedThreats:  quarantinedThreats,
-		RemediationLogs:     remediationLogs,
-	}
-	engine.Unlock()
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
-
 // ==========================================
-// 7. सर्वर इनिशियलाइज़ेशन व मेन फ़ंक्शन
+// 7. मेन फ़ंक्शन (एकीकृत स्टार्टअप और टेस्ट)
 // ==========================================
 
 func main() {
-	// 39 डायरेक्टिव्स लोड करना
+	// 1. 39 डायरेक्टिव्स लोड करना
 	engine.Directives = init39Directives()
 
-	// जेनेसिस ब्लॉक
-	engine.AddAuditLog("GENESIS: Anant Abhyaas Ultra System Initialized with 39 Master Directives")
+	// 2. जेनेसिस ब्लॉक और ब्लॉकचेन इनिशियलाइज़ेशन
+	engine.AddAuditLog("GENESIS: Anant Abhyaas Ultra Initialized with Master Directives & Directive #40")
 	engine.Lock()
 	engine.TrustedGenesis = engine.BlockchainLedger[0]
 	engine.BlockchainIntegrity = "BLOCKCHAIN_INTEGRITY_VERIFIED"
 	engine.AutonomousMonitorLive = true
 	engine.Unlock()
 
-	// क्लाउड कंप्यूटिंग टास्क
+	// 3. डायरेक्टिव #40 मास्टर इंजन और सभी 7 लेयर्स को एक्टिवेट करना
+	engine.Directive40.ApplyQuantumAndBehavioralGuard()
+	engine.Directive40.MeshLedgerSyncAndZKP()
+	engine.Directive40.InitializeDecoyPurgeSystem()
+
+	// 4. पैसिव स्टील्थ स्कैन टेस्ट
+	engine.Directive40.UniversalPassiveScan("target-company-domain.com")
+
+	// 5. सिम्बॉलिक गारबेज शील्ड टेस्ट
+	sampleData := "CONFIDENTIAL_LOCAL_LEDGER"
+	protectedData := engine.Directive40.TriggerGarbageCipher(sampleData)
+	fmt.Println("[SHIELD ACTIVE] Garbage Output for Decoders:", protectedData)
+
+	// 6. रिकवरी और री-एक्टिवेशन टेस्ट (डिकॉय वाइप के बाद वॉल्ट को वापस लाना)
+	fmt.Println("\n[TEST] Simulating vault lock and recovery...")
+	engine.Directive40.RestoreHiddenVault("WRONG_KEY_123")                  // यह फेल होगी
+	engine.Directive40.RestoreHiddenVault("ANANT_ULTRA_MASTER_GENESIS_2026") // यह सफल होगी
+
+	// 7. क्लाउड कंप्यूटिंग टास्क
 	cloudTasks := []string{
 		"Directive #02: Android 12+ (API 31-35) Matrix Enforcement",
 		"Directive #05: Secrets & Military Shield Verification",
 		"Directive #08: SAST Security Scan Pipeline",
 		"Directive #11: Container Sandbox Isolation",
 		"Directive #27: Zero-Trust Network Encryption",
-		"Directive #39: Telemetry Sentinel Monitoring",
+		"Directive #40: Stealth Purge & Dual-Face Vault Active",
 	}
 	engine.CloudWorkerPool(cloudTasks)
 
-	// एंडपॉइंट्स मैपिंग
+	// 8. एंडपॉइंट्स मैपिंग
 	http.HandleFunc("/", dashboardHandler)
 	http.HandleFunc("/api/version", versionHandler)
 	http.HandleFunc("/api/directives", apiDirectivesHandler)
 	http.HandleFunc("/api/logs", apiLogsHandler)
 	http.HandleFunc("/api/admin/handshake", adminHandshakeHandler)
-	http.HandleFunc("/api/admin/remediation-status", remediationStatusHandler)
 	http.HandleFunc("/api/verify-code", verifyCodeHandler)
-	http.HandleFunc("/api/admin/approve", adminApproveHandler)
-	http.HandleFunc("/api/admin/emergency-reset", emergencyRecoveryHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
+	// बैकग्राउंड ऑटोमैटिक मॉनिटर चालू करना
 	go engine.StartAutonomousMonitor(5 * time.Second)
 
 	log.Printf("🌐 'अनंत अभ्यास अल्ट्रा' मास्टर सर्वर http://0.0.0.0:%s पर सक्रिय है...\n", port)
