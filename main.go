@@ -698,7 +698,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "10000"
 	}
 
 	// बैकग्राउंड ऑटोमैटिक मॉनिटर चालू करना
