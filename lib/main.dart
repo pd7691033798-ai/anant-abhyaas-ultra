@@ -4,19 +4,19 @@ import 'package:http/http.dart' as http;
 import 'package:local_auth/local_auth.dart';
 
 void main() {
-  runApp(const UltraAdminApp());
+  runApp(const AnantUltraApp());
 }
 
-class UltraAdminApp extends StatelessWidget {
-  const UltraAdminApp({super.key});
+class AnantUltraApp extends StatelessWidget {
+  const AnantUltraApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Anant Abhyaas Ultra - Sovereign Core',
+      title: 'अनंत अभ्यास अल्ट्रा - सॉवरन कोर',
       theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0F172A),
+        scaffoldBackgroundColor: const Color(0xFF080C14),
         colorScheme: const ColorScheme.dark(
           primary: Color(0xFF00FFCC),
           secondary: Color(0xFF38BDF8),
@@ -127,7 +127,7 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const GeminiChatDashboard(),
+            builder: (context) => const MasterNavigationHub(),
           ),
         );
       } else if (mounted) {
@@ -233,7 +233,187 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
 }
 
 // ==========================================
-// 2. जेमिनी-जैसी चैट, GitHub स्कैनर और सैंडबॉक्स डैशबोर्ड
+// 2. मास्टर नेविगेशन हब (डैशबोर्ड और चैट के बीच स्विच करने के लिए)
+// ==========================================
+class MasterNavigationHub extends StatefulWidget {
+  const MasterNavigationHub({Key? key}) : super(key: key);
+
+  @override
+  _MasterNavigationHubState createState() => _MasterNavigationHubState();
+}
+
+class _MasterNavigationHubState extends State<MasterNavigationHub> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    const SovereignDashboard(),
+    const GeminiChatDashboard(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        backgroundColor: const Color(0xFF111827),
+        selectedItemColor: const Color(0xFF00FFCC),
+        unselectedItemColor: Colors.white54,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'डायरेक्टिव्स मैट्रिक्स',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'सॉवरन AI चैट',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ==========================================
+// 3. डायरेक्टिव्स और सिस्टम स्टेटस डैशबोर्ड
+// ==========================================
+class SovereignDashboard extends StatefulWidget {
+  const SovereignDashboard({Key? key}) : super(key: key);
+
+  @override
+  _SovereignDashboardState createState() => _SovereignDashboardState();
+}
+
+class _SovereignDashboardState extends State<SovereignDashboard> {
+  String systemStatus = "Connecting to Sovereign Core...";
+  List directives = [];
+  bool isLoading = true;
+
+  final String renderBaseUrl = "https://anant-abhyaas-ultra.onrender.com";
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSystemData();
+  }
+
+  Future<void> fetchSystemData() async {
+    try {
+      final versionRes = await http.get(Uri.parse('$renderBaseUrl/api/version'));
+      final directivesRes = await http.get(Uri.parse('$renderBaseUrl/api/directives'));
+
+      if (versionRes.statusCode == 200 && directivesRes.statusCode == 200) {
+        setState(() {
+          systemStatus = "AIR-GAPPED ULTRA ACTIVE";
+          directives = json.decode(directivesRes.body);
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        systemStatus = "Connection Failed: $e";
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF111827),
+        elevation: 0,
+        title: const Text(
+          "🚀 अनंत अभ्यास अल्ट्रा - कमांड सेंटर",
+          style: TextStyle(color: Color(0xFF38BDF8), fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF00FFCC)))
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ListView(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF111827),
+                      border: Border.all(color: const Color(0xFF1F2937)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "SECURITY STATUS",
+                          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          systemStatus,
+                          style: const TextStyle(color: Color(0xFF10B981), fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "📜 मास्टर डायरेक्टिव्स मैट्रिक्स (40/40)",
+                    style: TextStyle(color: Color(0xFFF8FAFC), fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: directives.length,
+                    itemBuilder: (context, index) {
+                      final item = directives[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF111827),
+                          border: Border.all(color: const Color(0xFF1F2937)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "#${item['id']} ${item['codename']}",
+                              style: const TextStyle(color: Color(0xFF93C5FD), fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF064E3B),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                item['status'],
+                                style: const TextStyle(color: Color(0xFF34D399), fontSize: 10),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+}
+
+// ==========================================
+// 4. जेमिनी-जैसी चैट, GitHub स्कैनर और सैंडबॉक्स डैशबोर्ड
 // ==========================================
 class GeminiChatDashboard extends StatefulWidget {
   const GeminiChatDashboard({super.key});
@@ -423,11 +603,7 @@ class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
                       ),
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-          if (_isSending)
+                  if (_isSending)
             const Padding(
               padding: EdgeInsets.all(8.0),
               child: LinearProgressIndicator(color: Color(0xFF00FFCC)),
@@ -453,10 +629,4 @@ class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
+  
