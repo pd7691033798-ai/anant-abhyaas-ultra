@@ -644,7 +644,7 @@ func apiLogsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(engine.BlockchainLedger)
 }
 
-func main() {
+func  {
 	fortress := NewFortress()
 	fmt.Println("Sovereign Fortress Initialized:", fortress.SystemID)
 	// 1. एडमिन हैंडशेक एंडपॉइंट
