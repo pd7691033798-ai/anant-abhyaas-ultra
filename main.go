@@ -642,6 +642,7 @@ func apiLogsHandler(w http.ResponseWriter, r *http.Request) {
 	defer engine.Unlock()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(engine.BlockchainLedger)
+}
 	// ==========================================
 // 7. मेन फ़ंक्शन (एकीकृत स्टार्टअप, कीप-अलाइव और टेस्ट)
 // ==========================================
