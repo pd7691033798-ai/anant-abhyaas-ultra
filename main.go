@@ -644,6 +644,9 @@ func apiLogsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(engine.BlockchainLedger)
 }
 
+func main() {
+	fortress := NewFortress()
+	fmt.Println("Sovereign Fortress Initialized:", fortress.SystemID)
 	// 1. एडमिन हैंडशेक एंडपॉइंट
 	http.HandleFunc("/api/admin/handshake", func(w http.ResponseWriter, r *http.Request) {
 		key := r.Header.Get("X-Admin-Master-Key")
@@ -682,7 +685,7 @@ func apiLogsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		fmt.Fprintln(w, scanReport)
 	})
-
+}
 	// ==========================================
 // 7. मेन फ़ंक्शन (एकीकृत स्टार्टअप, कीप-अलाइव और टेस्ट)
 // ==========================================
