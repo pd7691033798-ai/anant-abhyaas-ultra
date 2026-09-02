@@ -110,7 +110,7 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
 
     try {
       final response = await http.post(
-   Uri.parse('https://anant-abhyaas-ultra.onrender.com/api/admin/handshake'),
+        Uri.parse('https://anant-abhyaas-ultra.onrender.com/api/admin/handshake'),
         headers: {
           'Content-Type': 'application/json',
           'X-Admin-Master-Key': enteredKey,
@@ -207,9 +207,7 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: _isLoading
-                        ? null
-                        : _performBlockchainHandshake,
+                    onPressed: _isLoading ? null : _performBlockchainHandshake,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF00FFCC),
                       foregroundColor: Colors.black,
@@ -234,19 +232,72 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
   }
 }
 
-class AdminDashboard extends StatelessWidget {
+// ==========================================
+// 🚀 नया एडमिन डैशबोर्ड (एजेंट्स और सैंडबॉक्स कंट्रोल के साथ)
+// ==========================================
+class AdminDashboard extends StatefulWidget {
   final String genesisHash;
 
   const AdminDashboard({super.key, required this.genesisHash});
 
   @override
+  State<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard> {
+  final TextEditingController _ideaController = TextEditingController();
+  bool _isExecuting = false;
+  String _agentResponse = 'यहाँ AI एजेंट्स और सैंडबॉक्स का आउटपुट दिखेगा...';
+
+  Future<void> _runSovereignAgentSyndicate() async {
+    final idea = _ideaController.text.trim();
+    if (idea.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('कृपया कोई आइडिया या टास्क दर्ज करें')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isExecuting = true;
+      _agentResponse = '4 AI एजेंट्स (सिंडिकेट) टास्क पर काम कर रहे हैं...';
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'https://anant-abhyaas-ultra.onrender.com/api/sovereign-master?idea=$idea',
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _agentResponse = response.body;
+        });
+      } else {
+        setState(() {
+          _agentResponse = 'त्रुटि: सर्वर से रिस्पॉन्स प्राप्त करने में विफल।';
+        });
+      }
+    } catch (_) {
+      setState(() {
+        _agentResponse = 'कनेक्शन विफल। नेटवर्क जाँचें।';
+      });
+    } finally {
+      setState(() {
+        _isExecuting = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('एडमिन वॉल्ट - सक्रिय'),
+        title: const Text('सोवरन कमांड सेंटर - डैशबोर्ड'),
         backgroundColor: const Color(0xFF1E293B),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,23 +305,87 @@ class AdminDashboard extends StatelessWidget {
             const Text(
               'प्रमाणीकरण सफल: मिलिट्री-ग्रेड सेशन सक्रिय',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 color: Color(0xFF00FFCC),
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
-              'Genesis Hash Root:\n$genesisHash',
+              'Genesis Hash: ${widget.genesisHash}',
               style: const TextStyle(
                 color: Colors.white60,
                 fontFamily: 'monospace',
-                fontSize: 12,
+                fontSize: 11,
               ),
             ),
-            const Divider(height: 40),
-            const Center(
-              child: Text('सभी 39 डायरेक्टिव्स व सैंडबॉक्स नियंत्रण सक्रिय हैं।'),
+            const Divider(height: 30),
+
+            // 🤖 AI एजेंट्स और सैंडबॉक्स इनपुट सेक्शन
+            const Text(
+              '🤖 सॉवरन एजेंट्स व सैंडबॉक्स टास्क कंट्रोल',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _ideaController,
+              decoration: InputDecoration(
+                labelText: 'नया आइडिया या कोडिंग टास्क यहाँ दर्ज करें...',
+                filled: true,
+                fillColor: const Color(0xFF1E293B),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 45,
+              child: ElevatedButton.icon(
+                onPressed: _isExecuting ? null : _runSovereignAgentSyndicate,
+                icon: const Icon(Icons.bolt, color: Colors.black),
+                label: _isExecuting
+                    ? const CircularProgressIndicator(color: Colors.black)
+                    : const Text(
+                        'एजेंट्स सिंडिकेट और सैंडबॉक्स रन करें',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00FFCC),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // 📊 आउटपुट कंसोल टर्मिनल
+            const Text(
+              '📋 लाइव आउटपुट टर्मिनल (Audit & Syndicate Logs):',
+              style: TextStyle(fontSize: 14, color: Color(0xFF38BDF8)),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF020617),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: SelectableText(
+                _agentResponse,
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  color: Colors.greenAccent,
+                ),
+              ),
             ),
           ],
         ),
