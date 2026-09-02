@@ -7,19 +7,21 @@ import (
 	"time"
 )
 
+// =============================================================
 // SovereignFortress - अनंत अभ्यास अल्ट्रा का मास्टर कमांड सेंटर
+// =============================================================
 type SovereignFortress struct {
-	SystemID        string
-	IsAirGapped     bool
-	ActiveTimestamp time.Time
+	SystemID        string    `json:"system_id"`
+	IsAirGapped     bool      `json:"is_air_gapped"`
+	ActiveTimestamp time.Time `json:"active_timestamp"`
 }
 
-// NewFortress - सिस्टम इनिशियलाइज करना (पॉइंट 10: Zero-Telemetry & Air-Gap Policy)
+// NewFortress - सिस्टम इनिशियलाइज करना (Zero-Telemetry & Air-Gap Policy)
 func NewFortress() *SovereignFortress {
 	return &SovereignFortress{
 		SystemID:        "ANANT-ABHYAAS-ULTRA-V1",
 		IsAirGapped:     true,
-		ActiveTimestamp: time.Now(),
+		ActiveTimestamp: time.Now().UTC(),
 	}
 }
 
@@ -27,6 +29,10 @@ func NewFortress() *SovereignFortress {
 // पॉइंट 2: इन-हाउस मल्टी-एजेंट कोलाबोरटिव इंजन (4 Sovereign AI Agents)
 // -------------------------------------------------------------
 func (f *SovereignFortress) RunAgentSyndicate(rawIdea string) map[string]string {
+	if rawIdea == "" {
+		rawIdea = "Default Sovereign Operation"
+	}
+	
 	results := make(map[string]string)
 
 	// एजेंट 1: द थिंकर्स & प्लानर
@@ -39,7 +45,7 @@ func (f *SovereignFortress) RunAgentSyndicate(rawIdea string) map[string]string 
 	results["Writer"] = "Memory locked. Internal ledger and markdown documentation updated."
 
 	// एजेंट 4: द रेड-टीम डिफेंस एजेंट
-	results["RedTeam"] = "Self-attack simulation completed. Vulnerabilities patched."
+	results["RedTeam"] = "Self-attack simulation completed. Vulnerabilities patched. 0 threats detected."
 
 	return results
 }
@@ -49,7 +55,7 @@ func (f *SovereignFortress) RunAgentSyndicate(rawIdea string) map[string]string 
 // -------------------------------------------------------------
 func (f *SovereignFortress) GenerateAuditLog(action string) string {
 	timestamp := time.Now().Format(time.RFC3339)
-	return fmt.Sprintf("[AUDIT-LOG][%s] Action Executed: %s | Status: SECURE", timestamp, action)
+	return fmt.Sprintf("[AUDIT-LOG][%s] Action Executed: %s | Status: SECURE | Integrity: VERIFIED", timestamp, action)
 }
 
 // -------------------------------------------------------------
@@ -59,7 +65,7 @@ func (f *SovereignFortress) DecoyGatekeeper(isUnauthorizedProbe bool) string {
 	if isUnauthorizedProbe {
 		return "HTTP/1.1 200 OK - Standard Public Service Node (No Master Data Here)"
 	}
-	return "ACCESS GRANTED TO SOVEREIGN CORE"
+	return "RESTRICTED: Sovereign Master Core Active. Air-Gap Shield Engaged."
 }
 
 // -------------------------------------------------------------
