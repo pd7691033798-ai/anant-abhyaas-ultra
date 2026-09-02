@@ -644,7 +644,7 @@ func apiLogsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(engine.BlockchainLedger)
 }
 // ==========================================
-// 7. मेन फ़ंक्शन (एकीकृत स्टार्टअप और टेस्ट)
+// 7. मेन फ़ंक्शन (एकीकृत स्टार्टअप, कीप-अलाइव और टेस्ट)
 // ==========================================
 
 func main() {
@@ -687,6 +687,26 @@ func main() {
 		"Directive #40: Stealth Purge & Dual-Face Vault Active",
 	}
 	engine.CloudWorkerPool(cloudTasks)
+
+	// ==========================================
+	// 🚀 KEEP-ALIVE BACKGROUND TICKER (रेंडर स्लीप रोकने के लिए)
+	// ==========================================
+	go func() {
+		targetURL := "https://anant-abhyaas-ultra.onrender.com/api/version"
+		ticker := time.NewTicker(9 * time.Minute)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			resp, err := http.Get(targetURL)
+			if err != nil {
+				log.Printf("Keep-alive ping failed: %v", err)
+				continue
+			}
+			resp.Body.Close()
+			log.Println("Keep-alive ping sent successfully to prevent sleep mode.")
+		}
+	}()
+	// ==========================================
 
 	// 8. एंडपॉइंट्स मैपिंग
 	http.HandleFunc("/", dashboardHandler)
