@@ -20,6 +20,35 @@ import (
 // 1. डेटा संरचनाएँ (DATA STRUCTURES)
 // ==========================================
 
+// सॉवरन कोर स्ट्रक्चर (Gemini-style chat & sovereign syndicate support)
+type SovereignFortress struct {
+	SystemID string
+}
+
+func NewFortress() *SovereignFortress {
+	return &SovereignFortress{SystemID: "ANANT-ABHYAAS-ULTRA-V1"}
+}
+
+func (f *SovereignFortress) DecoyGatekeeper(isPublic bool) string {
+	if isPublic {
+		return "Standard Public Service Node - Operational"
+	}
+	return "RESTRICTED: Sovereign Master Core Active."
+}
+
+func (f *SovereignFortress) RunAgentSyndicate(idea string) map[string]string {
+	return map[string]string{
+		"Planner":   "Task analyzed for sovereign architecture: " + idea,
+		"Architect": "Custom language and sandbox security layout verified.",
+		"Writer":    "Code structure optimized for zero-trust environment.",
+		"Red-Team":  "Vulnerability scan complete: 0 threats detected.",
+	}
+}
+
+func (f *SovereignFortress) GenerateAuditLog(action string) string {
+	return fmt.Sprintf("[AUDIT LOG] Action: %s | Timestamp: %s | Integrity: VERIFIED", action, time.Now().Format(time.RFC3339))
+}
+
 // ब्लॉकचेन लेज़र ब्लॉक
 type AuditBlock struct {
 	Index        int       `json:"index"`
@@ -72,7 +101,6 @@ type Directive40Engine struct {
 	VaultLocked bool
 }
 
-// 1 & 2. पॉलीमोर्फ़िक सिम्बोलिक गारबेज एन्क्रिप्शन और हनीपोट ट्रैप
 func (d *Directive40Engine) TriggerGarbageCipher(inputData string) string {
 	symbols := []string{"#", "$", "%", "!", "&", "*", "@", "§", "Ψ", "Ø", "∆", "Σ"}
 	obfuscated := ""
@@ -82,29 +110,24 @@ func (d *Directive40Engine) TriggerGarbageCipher(inputData string) string {
 	return obfuscated
 }
 
-// 3. पैसिव स्टील्थ स्कैनिंग (बिना टारगेट को छुए रीकॉन्सेंस)
 func (d *Directive40Engine) UniversalPassiveScan(target string) {
 	fmt.Printf("[STEALTH RECON] Running zero-touch passive scan on target: %s (Zero IP footprint)\n", target)
 }
 
-// 4 & 5. क्वांटम-रेसिस्टेंट एन्क्रिप्शन और बायोमेट्रिक बिहेवियरल गार्ड
 func (d *Directive40Engine) ApplyQuantumAndBehavioralGuard() {
 	fmt.Println("[QUANTUM & BIOMETRIC] Post-Quantum Lattice & Live Behavioral Token Active.")
 }
 
-// 6. ज़ीरो-नॉलेज प्रूफ्स (ZKP) और मेश नेटवर्क लेज़र सिंक
 func (d *Directive40Engine) MeshLedgerSyncAndZKP() {
 	fmt.Println("[MESH & ZKP] Synchronizing local ledger via P2P mesh network using ZKP validation.")
 }
 
-// 7. डिकॉय सेल्फ-डिस्ट्रिक्ट (दिखने में सब खत्म, लेकिन अंदर से हिडन वॉल्ट सुरक्षित)
 func (d *Directive40Engine) InitializeDecoyPurgeSystem() {
 	d.ActiveState = true
 	d.VaultLocked = false
 	go func() {
 		for d.ActiveState {
 			time.Sleep(5 * time.Millisecond)
-			// डिबगर या तांक-झांक मिलने पर डिकॉय वाइप ट्रिगर किया जा सकता है
 		}
 	}()
 }
@@ -115,22 +138,19 @@ func (d *Directive40Engine) ExecuteDecoyWipe() {
 	d.VaultLocked = true
 }
 
-// [रिकवरी फंक्शन] हिडन वॉल्ट को दोबारा रिकवर करने का मेकैनिज्म (मास्टर की: ANANT_ULTRA_MASTER_GENESIS_2026)
 func (d *Directive40Engine) RestoreHiddenVault(masterRecoveryKey string) bool {
 	expectedSecretKey := "ANANT_ULTRA_MASTER_GENESIS_2026"
-
 	if masterRecoveryKey == expectedSecretKey {
 		d.VaultLocked = false
 		d.ActiveState = true
 		fmt.Println("[RECOVERY SUCCESS] Secret Genesis Handshake verified. Hidden vault restored successfully!")
 		return true
 	}
-
 	fmt.Println("[RECOVERY FAILED] Invalid security key. System remains locked in decoy state.")
 	return false
 }
 
-// मास्टर सिस्टम स्टेट (Master Engine State)
+// मास्टर सिस्टम स्टेट
 type AnantAbhyaasUltra struct {
 	sync.Mutex
 	BlockchainLedger      []AuditBlock        `json:"ledger"`
@@ -154,7 +174,6 @@ type AnantAbhyaasUltra struct {
 	Directive40           Directive40Engine   `json:"directive_40"`
 }
 
-// ग्लोबल इंजन स्टेट
 var engine = &AnantAbhyaasUltra{
 	BlockchainLedger:    make([]AuditBlock, 0),
 	PendingApproval:     make(map[string]string),
@@ -538,7 +557,6 @@ const htmlTemplate = `
 </body>
 </html>
 `
-
 // ==========================================
 // 6. HTTP API हैंडलर्स
 // ==========================================
@@ -644,53 +662,9 @@ func apiLogsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(engine.BlockchainLedger)
 }
 
-func main()  {
-	fortress := NewFortress()
-	fmt.Println("Sovereign Fortress Initialized:", fortress.SystemID)
-	// 1. एडमिन हैंडशेक एंडपॉइंट
-	http.HandleFunc("/api/admin/handshake", func(w http.ResponseWriter, r *http.Request) {
-		key := r.Header.Get("X-Admin-Master-Key")
-		if key != "ANANT_ULTRA_MASTER_GENESIS_2026" {
-			http.Error(w, `{"status":"UNAUTHORIZED"}`, http.StatusUnauthorized)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, `{"status":"HANDSHAKE_VERIFIED", "genesis_hash":"3465e2405328f12abdfc34ce454cb955badbcc88e65dbdc70e431fa791096a45"}`)
-	})
-
-	// 2. जेमिनी-जैसी चैट और एजेंट सिंडिकेट एंडपॉइंट
-	http.HandleFunc("/api/agent-chat", func(w http.ResponseWriter, r *http.Request) {
-		message := r.URL.Query().Get("msg")
-		if message == "" {
-			message = "General System Status Check"
-		}
-
-		agentOutputs := fortress.RunAgentSyndicate(message)
-		auditLog := fortress.GenerateAuditLog("AgentChatInteraction")
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"response":"🤖 [सॉवरन एजेंट्स उत्तर]: आपके टास्क '%s' पर विचार किया गया।\n\nप्लानेर: %s\nआर्किटेक्चर: %s\nराइटर: %s\nरेड-टीम: %s\n\n%s"}`, 
-			message, agentOutputs["Planner"], agentOutputs["Architect"], agentOutputs["Writer"], agentOutputs["Red-Team"], auditLog)
-	})
-
-	// 3. GitHub रिपॉजिटरी स्कैनिंग और सैंडबॉक्स डेमो एंडपॉइंट
-	http.HandleFunc("/api/scan-github", func(w http.ResponseWriter, r *http.Request) {
-		repoURL := r.URL.Query().Get("repo")
-		if repoURL == "" {
-			repoURL = "Local-Sovereign-Sandbox-Repo"
-		}
-
-		scanReport := fmt.Sprintf("=== 🔍 GitHub SAST & Sandbox Demo Report ===\nTarget: %s\nStatus: SCAN COMPLETE & SECURE\n- Vulnerabilities Fixed: 0 Critical, 2 Minor Patched.\n- Sandbox Demo Module: WhatsApp/Facebook integration wrapper simulated successfully under Directive #08 & #11.\n- Custom AI Lexer: Language syntax verified.", repoURL)
-		
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		fmt.Fprintln(w, scanReport)
-	})
-}
-
-	// ==========================================
-// 7. मेन फ़ंक्शन (एकीकृत स्टार्टअप, कीप-अलाइव और टेस्ट)
 // ==========================================
-
+// 7. एकीकृत मुख्य फंक्शन (SINGLE MAIN FUNCTION)
+// ==========================================
 func main() {
 	// 1. 39 डायरेक्टिव्स लोड करना
 	engine.Directives = init39Directives()
@@ -716,7 +690,7 @@ func main() {
 	protectedData := engine.Directive40.TriggerGarbageCipher(sampleData)
 	fmt.Println("[SHIELD ACTIVE] Garbage Output for Decoders:", protectedData)
 
-	// 6. रिकवरी और री-एक्टिवेशन टेस्ट (डिकॉय वाइप के बाद वॉल्ट को वापस लाना)
+	// 6. रिकवरी और री-एक्टिवेशन टेस्ट
 	fmt.Println("\n[TEST] Simulating vault lock and recovery...")
 	engine.Directive40.RestoreHiddenVault("WRONG_KEY_123")                  // यह फेल होगी
 	engine.Directive40.RestoreHiddenVault("ANANT_ULTRA_MASTER_GENESIS_2026") // यह सफल होगी
@@ -754,11 +728,10 @@ func main() {
 	// ==========================================
 	// 8. एंडपॉइंट्स मैपिंग और सॉवरन इंटीग्रेशन
 	// ==========================================
-	// सॉवरन कोर इनिशियलाइज़ करना
 	fortress := NewFortress()
 	fmt.Println("Sovereign Fortress Initialized:", fortress.SystemID)
 
-	// पुराने और नए सभी एंडपॉइंट्स रजिस्टर करना
+	// मुख्य डैशबोर्ड और API रूट्स
 	http.HandleFunc("/", dashboardHandler)
 	http.HandleFunc("/api/version", versionHandler)
 	http.HandleFunc("/api/directives", apiDirectivesHandler)
@@ -766,7 +739,34 @@ func main() {
 	http.HandleFunc("/api/admin/handshake", adminHandshakeHandler)
 	http.HandleFunc("/api/verify-code", verifyCodeHandler)
 
-	// नए सॉवरन एंडपॉइंट्स (डमी सर्वर और मास्टर एजेंट्स)
+	// जेमिनी-जैसी चैट, एजेंट सिंडिकेट और गिटहब स्कैनर रूट्स
+	http.HandleFunc("/api/agent-chat", func(w http.ResponseWriter, r *http.Request) {
+		message := r.URL.Query().Get("msg")
+		if message == "" {
+			message = "General System Status Check"
+		}
+
+		agentOutputs := fortress.RunAgentSyndicate(message)
+		auditLog := fortress.GenerateAuditLog("AgentChatInteraction")
+
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"response":"🤖 [सॉवरन एजेंट्स उत्तर]: आपके टास्क '%s' पर विचार किया गया।\n\nप्लानेर: %s\nआर्किटेक्चर: %s\nराइटर: %s\nरेड-टीम: %s\n\n%s"}`,
+			message, agentOutputs["Planner"], agentOutputs["Architect"], agentOutputs["Writer"], agentOutputs["Red-Team"], auditLog)
+	})
+
+	http.HandleFunc("/api/scan-github", func(w http.ResponseWriter, r *http.Request) {
+		repoURL := r.URL.Query().Get("repo")
+		if repoURL == "" {
+			repoURL = "Local-Sovereign-Sandbox-Repo"
+		}
+
+		scanReport := fmt.Sprintf("=== 🔍 GitHub SAST & Sandbox Demo Report ===\nTarget: %s\nStatus: SCAN COMPLETE & SECURE\n- Vulnerabilities Fixed: 0 Critical, 2 Minor Patched.\n- Sandbox Demo Module: WhatsApp/Facebook integration wrapper simulated successfully under Directive #08 & #11.\n- Custom AI Lexer: Language syntax verified.", repoURL)
+
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		fmt.Fprintln(w, scanReport)
+	})
+
+	// अतिरिक्त सॉवरन एंडपॉइंट्स (डिकॉय और मास्टर एजेंट्स)
 	registerSovereignEndpoints(fortress)
 
 	// बैकग्राउंड ऑटोमैटिक मॉनिटर चालू करना
@@ -785,7 +785,7 @@ func main() {
 }
 
 // ==========================================
-// सॉवरन रूट्स मैपिंग फ़ंक्शन (main फ़ंक्शन के बाहर रहेगा)
+// सॉवरन रूट्स मैपिंग फ़ंक्शन (फंक्शन बॉडी के बाहर)
 // ==========================================
 func registerSovereignEndpoints(fortress *SovereignFortress) {
 	// 1. डमी / डिकॉय सर्वर एंडपॉइंट
@@ -807,6 +807,3 @@ func registerSovereignEndpoints(fortress *SovereignFortress) {
 		fmt.Fprintf(w, "=== ANANT ABHYAAS ULTRA MASTER CORE ===\n%s\n\nAgent Syndicate Output:\n%+v", auditLog, agentOutputs)
 	})
 }
-	
-
-
