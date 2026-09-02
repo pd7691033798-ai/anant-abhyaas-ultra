@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:local_auth/local_auth.dart';
@@ -15,7 +14,7 @@ class UltraAdminApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Anant Abhyaas Ultra - Vault',
+      title: 'Anant Abhyaas Ultra - Sovereign Core',
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF0F172A),
         colorScheme: const ColorScheme.dark(
@@ -28,6 +27,9 @@ class UltraAdminApp extends StatelessWidget {
   }
 }
 
+// ==========================================
+// 1. सुरक्षा गेटवे (बायोमेट्रिक और मास्टर की)
+// ==========================================
 class SecurityGateScreen extends StatefulWidget {
   const SecurityGateScreen({super.key});
 
@@ -97,9 +99,9 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
   Future<void> _performBlockchainHandshake() async {
     final enteredKey = _keyController.text.trim();
     if (enteredKey.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('कृपया मास्टर की दर्ज करें')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('कृपया मास्टर की दर्ज करें')),
+      );
       return;
     }
 
@@ -125,9 +127,7 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => AdminDashboard(
-              genesisHash: data['genesis_hash'] ?? 'GENESIS_VERIFIED',
-            ),
+            builder: (context) => const GeminiChatDashboard(),
           ),
         );
       } else if (mounted) {
@@ -233,59 +233,115 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
 }
 
 // ==========================================
-// 🚀 नया एडमिन डैशबोर्ड (एजेंट्स और सैंडबॉक्स कंट्रोल के साथ)
+// 2. जेमिनी-जैसी चैट, GitHub स्कैनर और सैंडबॉक्स डैशबोर्ड
 // ==========================================
-class AdminDashboard extends StatefulWidget {
-  final String genesisHash;
-
-  const AdminDashboard({super.key, required this.genesisHash});
+class GeminiChatDashboard extends StatefulWidget {
+  const GeminiChatDashboard({super.key});
 
   @override
-  State<AdminDashboard> createState() => _AdminDashboardState();
+  State<GeminiChatDashboard> createState() => _GeminiChatDashboardState();
 }
 
-class _AdminDashboardState extends State<AdminDashboard> {
-  final TextEditingController _ideaController = TextEditingController();
-  bool _isExecuting = false;
-  String _agentResponse = 'यहाँ AI एजेंट्स और सैंडबॉक्स का आउटपुट दिखेगा...';
+class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
+  final TextEditingController _msgController = TextEditingController();
+  final TextEditingController _repoController = TextEditingController();
+  
+  final List<Map<String, String>> _messages = [
+    {
+      "sender": "agent",
+      "text": "नमस्ते मास्टर! अनंत अभ्यास अल्ट्रा सॉवरन कोर सक्रिय है। आप मुझसे सीधे चैट कर सकते हैं या ऊपर दिए गए सुरक्षा (Security) आइकॉन से GitHub रिपॉजिटरी और सैंडबॉक्स डेमो रन कर सकते हैं।"
+    }
+  ];
+  bool _isSending = false;
 
-  Future<void> _runSovereignAgentSyndicate() async {
-    final idea = _ideaController.text.trim();
-    if (idea.isEmpty) {
+  Future<void> _sendMessage(String text) async {
+    if (text.trim().isEmpty) return;
+
+    setState(() {
+      _messages.add({"sender": "user", "text": text});
+      _isSending = true;
+    });
+    _msgController.clear();
+
+    try {
+      final res = await http.get(
+        Uri.parse('https://anant-abhyaas-ultra.onrender.com/api/agent-chat?msg=$text'),
+      );
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        setState(() {
+          _messages.add({
+            "sender": "agent",
+            "text": data['response'] ?? 'एजेंट्स ने प्रतिक्रिया दी।'
+          });
+        });
+      } else {
+        setState(() {
+          _messages.add({
+            "sender": "agent",
+            "text": "त्रुटि: सर्वर से अमान्य रिस्पॉन्स प्राप्त हुआ।"
+          });
+        });
+      }
+    } catch (_) {
+      setState(() {
+        _messages.add({
+          "sender": "agent",
+          "text": "त्रुटि: सर्वर से संपर्क विफल।"
+        });
+      });
+    } finally {
+      setState(() {
+        _isSending = false;
+      });
+    }
+  }
+
+  Future<void> _runGitHubScanAndSandbox(String repoUrl) async {
+    if (repoUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('कृपया कोई आइडिया या टास्क दर्ज करें')),
+        const SnackBar(content: Text('कृपया रिपॉजिटरी URL दर्ज करें')),
       );
       return;
     }
 
     setState(() {
-      _isExecuting = true;
-      _agentResponse = '4 AI एजेंट्स (सिंडिकेट) टास्क पर काम कर रहे हैं...';
+      _messages.add({
+        "sender": "user",
+        "text": "GitHub Scan & Sandbox Demo request for: $repoUrl"
+      });
+      _isSending = true;
     });
 
     try {
-      final response = await http.get(
-        Uri.parse(
-          'https://anant-abhyaas-ultra.onrender.com/api/sovereign-master?idea=$idea',
-        ),
+      final res = await http.get(
+        Uri.parse('https://anant-abhyaas-ultra.onrender.com/api/scan-github?repo=$repoUrl'),
       );
-
-      if (response.statusCode == 200) {
+      if (res.statusCode == 200) {
         setState(() {
-          _agentResponse = response.body;
+          _messages.add({
+            "sender": "agent",
+            "text": res.body
+          });
         });
       } else {
         setState(() {
-          _agentResponse = 'त्रुटि: सर्वर से रिस्पॉन्स प्राप्त करने में विफल।';
+          _messages.add({
+            "sender": "agent",
+            "text": "स्कैनिंग असफल: सर्वर त्रुटि।"
+          });
         });
       }
     } catch (_) {
       setState(() {
-        _agentResponse = 'कनेक्शन विफल। नेटवर्क जाँचें।';
+        _messages.add({
+          "sender": "agent",
+          "text": "नेटवर्क त्रुटि: रिपॉजिटरी स्कैनिंग विफल।"
+        });
       });
     } finally {
       setState(() {
-        _isExecuting = false;
+        _isSending = false;
       });
     }
   }
@@ -294,102 +350,113 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('सोवरन कमांड सेंटर - डैशबोर्ड'),
+        title: const Text('सॉवरन कमांड चैट (Gemini Style)'),
         backgroundColor: const Color(0xFF1E293B),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'प्रमाणीकरण सफल: मिलिट्री-ग्रेड सेशन सक्रिय',
-              style: TextStyle(
-                fontSize: 16,
-                color: Color(0xFF00FFCC),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Genesis Hash: ${widget.genesisHash}',
-              style: const TextStyle(
-                color: Colors.white60,
-                fontFamily: 'monospace',
-                fontSize: 11,
-              ),
-            ),
-            const Divider(height: 30),
-
-            // 🤖 AI एजेंट्स और सैंडबॉक्स इनपुट सेक्शन
-            const Text(
-              '🤖 सॉवरन एजेंट्स व सैंडबॉक्स टास्क कंट्रोल',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _ideaController,
-              decoration: InputDecoration(
-                labelText: 'नया आइडिया या कोडिंग टास्क यहाँ दर्ज करें...',
-                filled: true,
-                fillColor: const Color(0xFF1E293B),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 45,
-              child: ElevatedButton.icon(
-                onPressed: _isExecuting ? null : _runSovereignAgentSyndicate,
-                icon: const Icon(Icons.bolt, color: Colors.black),
-                label: _isExecuting
-                    ? const CircularProgressIndicator(color: Colors.black)
-                    : const Text(
-                        'एजेंट्स सिंडिकेट और सैंडबॉक्स रन करें',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.security, color: Color(0xFF00FFCC)),
+            tooltip: 'GitHub स्कैन और सैंडबॉक्स डेमो',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: const Color(0xFF1E293B),
+                  title: const Text('GitHub स्कैन और सैंडबॉक्स डेमो'),
+                  content: TextField(
+                    controller: _repoController,
+                    decoration: const InputDecoration(
+                      labelText: 'GitHub Repo URL या प्रोजेक्ट नाम',
+                      hintText: 'उदा: https://github.com/user/repo',
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('रद्द करें', style: TextStyle(color: Colors.white70)),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00FFCC),
+                        foregroundColor: Colors.black,
                       ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00FFCC),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                      onPressed: () {
+                        final repo = _repoController.text.trim();
+                        Navigator.pop(context);
+                        _runGitHubScanAndSandbox(repo);
+                        _repoController.clear();
+                      },
+                      child: const Text('स्कैन व डेमो चलाएं'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          )
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final msg = _messages[index];
+                final isUser = msg['sender'] == 'user';
+                return Align(
+                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    padding: const EdgeInsets.all(12),
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.75,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isUser ? const Color(0xFF38BDF8) : const Color(0xFF1E293B),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      msg['text']!,
+                      style: TextStyle(
+                        color: isUser ? Colors.black : Colors.white,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          if (_isSending)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: LinearProgressIndicator(color: Color(0xFF00FFCC)),
+            ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            color: const Color(0xFF1E293B),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _msgController,
+                    decoration: const InputDecoration(
+                      hintText: 'यहाँ अपना संदेश या कमांड टाइप करें...',
+                      border: InputBorder.none,
+                      hintStyle: TextStyle(color: Colors.white54),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // 📊 आउटपुट कंसोल टर्मिनल
-            const Text(
-              '📋 लाइव आउटपुट टर्मिनल (Audit & Syndicate Logs):',
-              style: TextStyle(fontSize: 14, color: Color(0xFF38BDF8)),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF020617),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white12),
-              ),
-              child: SelectableText(
-                _agentResponse,
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 12,
-                  color: Colors.greenAccent,
+                IconButton(
+                  icon: const Icon(Icons.send, color: Color(0xFF00FFCC)),
+                  onPressed: () => _sendMessage(_msgController.text),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+
