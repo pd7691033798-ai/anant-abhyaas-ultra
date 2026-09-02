@@ -20,30 +20,7 @@ import (
 // 1. डेटा संरचनाएँ (DATA STRUCTURES)
 // ==========================================
 
-// सॉवरन कोर स्ट्रक्चर (Gemini-style chat & sovereign syndicate support)
-type SovereignFortress struct {
-	SystemID string
-}
 
-func NewFortress() *SovereignFortress {
-	return &SovereignFortress{SystemID: "ANANT-ABHYAAS-ULTRA-V1"}
-}
-
-func (f *SovereignFortress) DecoyGatekeeper(isPublic bool) string {
-	if isPublic {
-		return "Standard Public Service Node - Operational"
-	}
-	return "RESTRICTED: Sovereign Master Core Active."
-}
-
-func (f *SovereignFortress) RunAgentSyndicate(idea string) map[string]string {
-	return map[string]string{
-		"Planner":   "Task analyzed for sovereign architecture: " + idea,
-		"Architect": "Custom language and sandbox security layout verified.",
-		"Writer":    "Code structure optimized for zero-trust environment.",
-		"Red-Team":  "Vulnerability scan complete: 0 threats detected.",
-	}
-}
 
 func (f *SovereignFortress) GenerateAuditLog(action string) string {
 	return fmt.Sprintf("[AUDIT LOG] Action: %s | Timestamp: %s | Integrity: VERIFIED", action, time.Now().Format(time.RFC3339))
