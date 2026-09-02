@@ -642,8 +642,7 @@ func apiLogsHandler(w http.ResponseWriter, r *http.Request) {
 	defer engine.Unlock()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(engine.BlockchainLedger)
-}
-// ==========================================
+	// ==========================================
 // 7. मेन फ़ंक्शन (एकीकृत स्टार्टअप, कीप-अलाइव और टेस्ट)
 // ==========================================
 
@@ -706,21 +705,15 @@ func main() {
 			log.Println("Keep-alive ping sent successfully to prevent sleep mode.")
 		}
 	}()
-	func main() {
-	// सॉवरन सिस्टम इनिशियलाइज करें
-	fortress := NewFortress()
-	fmt.Println("System Initialized:", fortress.SystemID)
 
-	// एंडपॉइंट्स मैपिंग को कॉल करें (सेक्शन 8 को यहाँ जोड़ दिया)
-	registerEndpoints(fortress)
-
-	// सर्वर चालू करें
-	fmt.Println("Anant Abhyas Ultra Master Server running securely on port 8080...")
-	http.ListenAndServe(":8080", nil)
-}
 	// ==========================================
+	// 8. एंडपॉइंट्स मैपिंग और सॉवरन इंटीग्रेशन
+	// ==========================================
+	// सॉवरन कोर इनिशियलाइज़ करना
+	fortress := NewFortress()
+	fmt.Println("Sovereign Fortress Initialized:", fortress.SystemID)
 
-	// 8. एंडपॉइंट्स मैपिंग
+	// पुराने और नए सभी एंडपॉइंट्स रजिस्टर करना
 	http.HandleFunc("/", dashboardHandler)
 	http.HandleFunc("/api/version", versionHandler)
 	http.HandleFunc("/api/directives", apiDirectivesHandler)
@@ -728,40 +721,47 @@ func main() {
 	http.HandleFunc("/api/admin/handshake", adminHandshakeHandler)
 	http.HandleFunc("/api/verify-code", verifyCodeHandler)
 
+	// नए सॉवरन एंडपॉइंट्स (डमी सर्वर और मास्टर एजेंट्स)
+	registerSovereignEndpoints(fortress)
+
+	// बैकग्राउंड ऑटोमैटिक मॉनिटर चालू करना
+	go engine.StartAutonomousMonitor(5 * time.Second)
+
+	// सर्वर लिसनर (Render के PORT एनवायरनमेंट वेरिएबल के साथ)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "10000"
 	}
-	func registerEndpoints(fortress *SovereignFortress) {
-	// 1. डमी / डिकॉय सर्वर एंडपॉइंट (पॉइंट 4: ट्रैकर्स और बॉट्स को धोखा देने के लिए)
-	http.HandleFunc("/api/public-decoy", func(w http.ResponseWriter, r *http.Request) {
-		decoyResponse := fortress.DecoyGatekeeper(true)
-		fmt.Fprintln(w, decoyResponse)
-	})
-
-	// 2. मास्टर एजेंट्स, सैंडबॉक्स और ऑडिट लॉग एंडपॉइंट (पॉइंट 2, 3, 5, 6, 7, 8)
-	http.HandleFunc("/api/sovereign-master", func(w http.ResponseWriter, r *http.Request) {
-		idea := r.URL.Query().Get("idea")
-		if idea == "" {
-			idea = "Default Sovereign Operation"
-		}
-
-		// चारों एजेंट्स का कोलाबोरटिव आउटपुट रन करना
-		agentOutputs := fortress.RunAgentSyndicate(idea)
-
-		// इम्यूटेबल ऑडिट लॉग जनरेट करना
-		auditLog := fortress.GenerateAuditLog("RunAgentSyndicate")
-
-		// रिस्पॉन्स भेजना
-		fmt.Fprintf(w, "=== ANANT ABHYAAS ULTRA MASTER CORE ===\n%s\n\nAgent Syndicate Output:\n%+v", auditLog, agentOutputs)
-	})
-}
-
-	// बैकग्राउंड ऑटोमैटिक मॉनिटर चालू करना
-	go engine.StartAutonomousMonitor(5 * time.Second)
 
 	log.Printf("🌐 'अनंत अभ्यास अल्ट्रा' मास्टर सर्वर http://0.0.0.0:%s पर सक्रिय है...\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatalf("Server launch failed: %v", err)
 	}
 }
+
+// ==========================================
+// सॉवरन रूट्स मैपिंग फ़ंक्शन (main फ़ंक्शन के बाहर रहेगा)
+// ==========================================
+func registerSovereignEndpoints(fortress *SovereignFortress) {
+	// 1. डमी / डिकॉय सर्वर एंडपॉइंट
+	http.HandleFunc("/api/public-decoy", func(w http.ResponseWriter, r *http.Request) {
+		decoyResponse := fortress.DecoyGatekeeper(true)
+		fmt.Fprintln(w, decoyResponse)
+	})
+
+	// 2. मास्टर एजेंट्स, सैंडबॉक्स और ऑडिट लॉग एंडपॉइंट
+	http.HandleFunc("/api/sovereign-master", func(w http.ResponseWriter, r *http.Request) {
+		idea := r.URL.Query().Get("idea")
+		if idea == "" {
+			idea = "Default Sovereign Operation"
+		}
+
+		agentOutputs := fortress.RunAgentSyndicate(idea)
+		auditLog := fortress.GenerateAuditLog("RunAgentSyndicate")
+
+		fmt.Fprintf(w, "=== ANANT ABHYAAS ULTRA MASTER CORE ===\n%s\n\nAgent Syndicate Output:\n%+v", auditLog, agentOutputs)
+	})
+}
+	
+}
+
