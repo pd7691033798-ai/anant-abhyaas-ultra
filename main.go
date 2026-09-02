@@ -763,5 +763,5 @@ func registerSovereignEndpoints(fortress *SovereignFortress) {
 	})
 }
 	
-}
+
 
