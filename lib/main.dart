@@ -233,7 +233,7 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
 }
 
 // ==========================================
-// 2. मास्टर नेविगेशन हब (डैशबोर्ड और चैट के बीच स्विच करने के लिए)
+// 2. मास्टर नेविगेशन हब
 // ==========================================
 class MasterNavigationHub extends StatefulWidget {
   const MasterNavigationHub({Key? key}) : super(key: key);
@@ -413,7 +413,7 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
 }
 
 // ==========================================
-// 4. जेमिनी-जैसी चैट, GitHub स्कैनर और सैंडबॉक्स डैशबोर्ड
+// 4. जेमिनी-जैसी चैट और GitHub स्कैनर
 // ==========================================
 class GeminiChatDashboard extends StatefulWidget {
   const GeminiChatDashboard({super.key});
@@ -603,7 +603,12 @@ class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
                       ),
                     ),
                   ),
-                  if (_isSending)
+                );
+              },
+            ),
+          ),
+ 
+if (_isSending)
             const Padding(
               padding: EdgeInsets.all(8.0),
               child: LinearProgressIndicator(color: Color(0xFF00FFCC)),
@@ -629,4 +634,9 @@ class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
                 ),
               ],
             ),
-  
+          ),
+        ],
+      ),
+    );
+  }
+}
