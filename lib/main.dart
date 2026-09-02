@@ -110,7 +110,7 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8080/api/admin/handshake'),
+   Uri.parse('https://anant-abhyaas-ultra.onrender.com/api/admin/handshake'),
         headers: {
           'Content-Type': 'application/json',
           'X-Admin-Master-Key': enteredKey,
