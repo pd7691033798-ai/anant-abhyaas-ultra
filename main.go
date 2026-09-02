@@ -20,12 +20,6 @@ import (
 // 1. डेटा संरचनाएँ (DATA STRUCTURES)
 // ==========================================
 
-
-
-func (f *SovereignFortress) GenerateAuditLog(action string) string {
-	return fmt.Sprintf("[AUDIT LOG] Action: %s | Timestamp: %s | Integrity: VERIFIED", action, time.Now().Format(time.RFC3339))
-}
-
 // ब्लॉकचेन लेज़र ब्लॉक
 type AuditBlock struct {
 	Index        int       `json:"index"`
@@ -534,6 +528,7 @@ const htmlTemplate = `
 </body>
 </html>
 `
+
 // ==========================================
 // 6. HTTP API हैंडलर्स
 // ==========================================
@@ -728,7 +723,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, `{"response":"🤖 [सॉवरन एजेंट्स उत्तर]: आपके टास्क '%s' पर विचार किया गया।\n\nप्लानेर: %s\nआर्किटेक्चर: %s\nराइटर: %s\nरेड-टीम: %s\n\n%s"}`,
-			message, agentOutputs["Planner"], agentOutputs["Architect"], agentOutputs["Writer"], agentOutputs["Red-Team"], auditLog)
+			message, agentOutputs["Planner"], agentOutputs["Architect"], agentOutputs["Writer"], agentOutputs["RedTeam"], auditLog)
 	})
 
 	http.HandleFunc("/api/scan-github", func(w http.ResponseWriter, r *http.Request) {
@@ -762,7 +757,7 @@ func main() {
 }
 
 // ==========================================
-// सॉवरन रूट्स मैपिंग फ़ंक्शन (फंक्शन बॉडी के बाहर)
+// सॉवरन रूट्स मैपिंग फ़ंक्शन
 // ==========================================
 func registerSovereignEndpoints(fortress *SovereignFortress) {
 	// 1. डमी / डिकॉय सर्वर एंडपॉइंट
