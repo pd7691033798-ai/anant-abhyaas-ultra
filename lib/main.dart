@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:local_auth/local_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const AnantUltraApp());
@@ -16,10 +17,10 @@ class AnantUltraApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'अनंत अभ्यास अल्ट्रा - सॉवरन कोर',
       theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF080C14),
+        scaffoldBackgroundColor: const Color(0xFF0B0F19),
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF00FFCC),
-          secondary: Color(0xFF38BDF8),
+          primary: Color(0xFF8B5CF6), // Dribbble पर्पल थीम
+          secondary: Color(0xFF00FFCC),
         ),
       ),
       home: const SecurityGateScreen(),
@@ -233,7 +234,7 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
 }
 
 // ==========================================
-// 2. मास्टर नेविगेशन हब
+// 2. मास्टर नेविगेशन हब (Dribbble Style)
 // ==========================================
 class MasterNavigationHub extends StatefulWidget {
   const MasterNavigationHub({Key? key}) : super(key: key);
@@ -256,8 +257,8 @@ class _MasterNavigationHubState extends State<MasterNavigationHub> {
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        backgroundColor: const Color(0xFF111827),
-        selectedItemColor: const Color(0xFF00FFCC),
+        backgroundColor: const Color(0xFF131B2E),
+        selectedItemColor: const Color(0xFF8B5CF6),
         unselectedItemColor: Colors.white54,
         onTap: (index) {
           setState(() {
@@ -266,8 +267,8 @@ class _MasterNavigationHubState extends State<MasterNavigationHub> {
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'डायरेक्टिव्स मैट्रिक्स',
+            icon: Icon(Icons.grid_view),
+            label: 'डैशबोर्ड',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.chat_bubble_outline),
@@ -280,7 +281,7 @@ class _MasterNavigationHubState extends State<MasterNavigationHub> {
 }
 
 // ==========================================
-// 3. डायरेक्टिव्स और सिस्टम स्टेटस डैशबोर्ड
+// 3. डायरेक्टिव्स और ऑटो-अपडेट सक्षम डैशबोर्ड
 // ==========================================
 class SovereignDashboard extends StatefulWidget {
   const SovereignDashboard({Key? key}) : super(key: key);
@@ -294,20 +295,21 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
   List directives = [];
   bool isLoading = true;
 
+  final String currentAppVersion = "1.0.0"; // आपके वर्तमान ऐप का वर्जन
   final String renderBaseUrl = "https://anant-abhyaas-ultra.onrender.com";
 
   @override
   void initState() {
     super.initState();
     fetchSystemData();
+    checkForUpdates(); // ऐप खुलते ही ऑटो-अपडेट चेक करेगा
   }
 
   Future<void> fetchSystemData() async {
     try {
-      final versionRes = await http.get(Uri.parse('$renderBaseUrl/api/version'));
       final directivesRes = await http.get(Uri.parse('$renderBaseUrl/api/directives'));
 
-      if (versionRes.statusCode == 200 && directivesRes.statusCode == 200) {
+      if (directivesRes.statusCode == 200) {
         setState(() {
           systemStatus = "AIR-GAPPED ULTRA ACTIVE";
           directives = json.decode(directivesRes.body);
@@ -322,92 +324,174 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
     }
   }
 
+  // OTA ऑटो-अपडेट चेकिंग फंक्शन
+  Future<void> checkForUpdates() async {
+    try {
+      // आप अपने रेंडर पर एक छोटा वर्जन एपीआई बना सकते हैं, या वर्तमान वर्जन की तुलना कर सकते हैं
+      final res = await http.get(Uri.parse('$renderBaseUrl/api/version'));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        String serverVersion = data['engine_version'] ?? "v1.0.0-PROD-STEALTH";
+
+        // यदि सर्वर पर नया वर्जन उपलब्ध हो
+        if (!serverVersion.contains(currentAppVersion)) {
+          if (!mounted) return;
+          showUpdateDialog(context);
+        }
+      }
+    } catch (_) {
+      // यदि चेक फेल हो जाए तो इग्नोर करें
+    }
+  }
+
+  void showUpdateDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF131B2E),
+        title: const Text('🚀 नया OTA अपडेट उपलब्ध है', style: TextStyle(color: Color(0xFF00FFCC))),
+        content: const Text(
+          'सिस्टम में नया मिलिट्री-ग्रेड अपडेट जारी किया गया है। बिना Codemagic खोले सीधे नया APK डाउनलोड करने के लिए नीचे क्लिक करें।',
+          style: TextStyle(color: Colors.white70, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('बाद में', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6)),
+            onPressed: () async {
+              Navigator.pop(context);
+              final Uri apkUrl = Uri.parse('$renderBaseUrl/'); // यहाँ डायरेक्ट APK डाउनलोड लिंक दे सकते हैं
+              if (await canLaunchUrl(apkUrl)) {
+                await launchUrl(apkUrl, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: const Text('अपडेट करें', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF111827),
-        elevation: 0,
-        title: const Text(
-          "🚀 अनंत अभ्यास अल्ट्रा - कमांड सेंटर",
-          style: TextStyle(color: Color(0xFF38BDF8), fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF00FFCC)))
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  Row(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFF8B5CF6), width: 2),
+                        ),
+                        child: const CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Color(0xFF1E1B4B),
+                          child: Icon(Icons.security, color: Color(0xFF00FFCC), size: 18),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text("सॉवरन मास्टर", style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                          Text("Anant Abhyaas Ultra", style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
+                        ],
+                      ),
+                    ],
+                  ),
                   Container(
-                    padding: const EdgeInsets.all(18),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF111827),
-                      border: Border.all(color: const Color(0xFF1F2937)),
+                      color: const Color(0xFF1E1B4B),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "SECURITY STATUS",
-                          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          systemStatus,
-                          style: const TextStyle(color: Color(0xFF10B981), fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "📜 मास्टर डायरेक्टिव्स मैट्रिक्स (40/40)",
-                    style: TextStyle(color: Color(0xFFF8FAFC), fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: directives.length,
-                    itemBuilder: (context, index) {
-                      final item = directives[index];
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF111827),
-                          border: Border.all(color: const Color(0xFF1F2937)),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "#${item['id']} ${item['codename']}",
-                              style: const TextStyle(color: Color(0xFF93C5FD), fontSize: 13, fontWeight: FontWeight.w600),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF064E3B),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                item['status'],
-                                style: const TextStyle(color: Color(0xFF34D399), fontSize: 10),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                    child: Text(systemStatus, style: const TextStyle(color: Color(0xFF34D399), fontSize: 10, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 20),
+
+              // Dribbble Banner Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text("OTA Auto-Update Active", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 4),
+                    Text("अब हर नए बदलाव पर ऐप खुद आपको अपडेट के लिए सूचित करेगा।", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              const Text("मास्टर डायरेक्टिव्स मैट्रिक्स", style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+
+              Expanded(
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6)))
+                    : ListView.builder(
+                        itemCount: directives.length,
+                        itemBuilder: (context, index) {
+                          final item = directives[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF131B2E),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFF1E293B)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "#${item['id']} ${item['codename']}",
+                                  style: const TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontWeight: FontWeight.w600),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF064E3B),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    item['status'],
+                                    style: const TextStyle(color: Color(0xFF34D399), fontSize: 9),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -429,7 +513,7 @@ class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
   final List<Map<String, String>> _messages = [
     {
       "sender": "agent",
-      "text": "नमस्ते मास्टर! अनंत अभ्यास अल्ट्रा सॉवरन कोर सक्रिय है। आप मुझसे सीधे चैट कर सकते हैं या ऊपर दिए गए सुरक्षा (Security) आइकॉन से GitHub रिपॉजिटरी और सैंडबॉक्स डेमो रन कर सकते हैं।"
+      "text": "नमस्ते मास्टर! अनंत अभ्यास अल्ट्रा सॉवरन कोर सक्रिय है। आप मुझसे सीधे चैट कर सकते हैं या ऊपर दिए गए सुरक्षा आइकॉन से GitHub रिपॉजिटरी स्कैन कर सकते हैं।"
     }
   ];
   bool _isSending = false;
@@ -455,41 +539,21 @@ class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
             "text": data['response'] ?? 'एजेंट्स ने प्रतिक्रिया दी।'
           });
         });
-      } else {
-        setState(() {
-          _messages.add({
-            "sender": "agent",
-            "text": "त्रुटि: सर्वर से अमान्य रिस्पॉन्स प्राप्त हुआ।"
-          });
-        });
       }
     } catch (_) {
       setState(() {
-        _messages.add({
-          "sender": "agent",
-          "text": "त्रुटि: सर्वर से संपर्क विफल।"
-        });
+        _messages.add({"sender": "agent", "text": "त्रुटि: सर्वर से संपर्क विफल।"});
       });
     } finally {
-      setState(() {
-        _isSending = false;
-      });
+      setState(() { _isSending = false; });
     }
   }
 
   Future<void> _runGitHubScanAndSandbox(String repoUrl) async {
-    if (repoUrl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('कृपया रिपॉजिटरी URL दर्ज करें')),
-      );
-      return;
-    }
+    if (repoUrl.isEmpty) return;
 
     setState(() {
-      _messages.add({
-        "sender": "user",
-        "text": "GitHub Scan & Sandbox Demo request for: $repoUrl"
-      });
+      _messages.add({"sender": "user", "text": "GitHub Scan request for: $repoUrl"});
       _isSending = true;
     });
 
@@ -499,30 +563,15 @@ class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
       );
       if (res.statusCode == 200) {
         setState(() {
-          _messages.add({
-            "sender": "agent",
-            "text": res.body
-          });
-        });
-      } else {
-        setState(() {
-          _messages.add({
-            "sender": "agent",
-            "text": "स्कैनिंग असफल: सर्वर त्रुटि।"
-          });
+          _messages.add({"sender": "agent", "text": res.body});
         });
       }
     } catch (_) {
       setState(() {
-        _messages.add({
-          "sender": "agent",
-          "text": "नेटवर्क त्रुटि: रिपॉजिटरी स्कैनिंग विफल।"
-        });
+        _messages.add({"sender": "agent", "text": "स्कैनिंग असफल।"});
       });
     } finally {
-      setState(() {
-        _isSending = false;
-      });
+      setState(() { _isSending = false; });
     }
   }
 
@@ -530,42 +579,32 @@ class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('सॉवरन कमांड चैट (Gemini Style)'),
-        backgroundColor: const Color(0xFF1E293B),
+        title: const Text('सॉवरन कमांड चैट'),
+        backgroundColor: const Color(0xFF131B2E),
         actions: [
           IconButton(
             icon: const Icon(Icons.security, color: Color(0xFF00FFCC)),
-            tooltip: 'GitHub स्कैन और सैंडबॉक्स डेमो',
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  backgroundColor: const Color(0xFF1E293B),
-                  title: const Text('GitHub स्कैन और सैंडबॉक्स डेमो'),
+                  backgroundColor: const Color(0xFF131B2E),
+                  title: const Text('GitHub स्कैन'),
                   content: TextField(
                     controller: _repoController,
-                    decoration: const InputDecoration(
-                      labelText: 'GitHub Repo URL या प्रोजेक्ट नाम',
-                      hintText: 'उदा: https://github.com/user/repo',
-                    ),
+                    decoration: const InputDecoration(hintText: 'उदा: https://github.com/user/repo'),
                   ),
                   actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('रद्द करें', style: TextStyle(color: Colors.white70)),
-                    ),
+                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('रद्द करें')),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00FFCC),
-                        foregroundColor: Colors.black,
-                      ),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6)),
                       onPressed: () {
                         final repo = _repoController.text.trim();
                         Navigator.pop(context);
                         _runGitHubScanAndSandbox(repo);
                         _repoController.clear();
                       },
-                      child: const Text('स्कैन व डेमो चलाएं'),
+                      child: const Text('स्कैन चलाएं'),
                     ),
                   ],
                 ),
@@ -588,43 +627,28 @@ class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 6),
                     padding: const EdgeInsets.all(12),
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.75,
-                    ),
                     decoration: BoxDecoration(
-                      color: isUser ? const Color(0xFF38BDF8) : const Color(0xFF1E293B),
+                      color: isUser ? const Color(0xFF8B5CF6) : const Color(0xFF131B2E),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      msg['text']!,
-                      style: TextStyle(
-                        color: isUser ? Colors.black : Colors.white,
-                        fontSize: 13,
-                      ),
-                    ),
+                    child: Text(msg['text']!, style: const TextStyle(fontSize: 13, color: Colors.white)),
                   ),
                 );
               },
             ),
           ),
- 
-if (_isSending)
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: LinearProgressIndicator(color: Color(0xFF00FFCC)),
-            ),
+          if (_isSending) const LinearProgressIndicator(color: Color(0xFF00FFCC)),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            color: const Color(0xFF1E293B),
+            color: const Color(0xFF131B2E),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _msgController,
                     decoration: const InputDecoration(
-                      hintText: 'यहाँ अपना संदेश या कमांड टाइप करें...',
+                      hintText: 'यहाँ कमांड टाइप करें...',
                       border: InputBorder.none,
-                      hintStyle: TextStyle(color: Colors.white54),
                     ),
                   ),
                 ),
@@ -639,4 +663,4 @@ if (_isSending)
       ),
     );
   }
-}
+  
