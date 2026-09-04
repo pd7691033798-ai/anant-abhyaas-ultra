@@ -34,6 +34,8 @@ dependencies:
   local_auth: ^2.3.0
   url_launcher: ^6.2.5 # <-- इसे यहाँ जोड़ दें
   webview_flutter: ^4.7.0
+  path_provider: ^2.1.2     # फोन के लोकल स्टोरेज का पाथ पाने के लिए
+  open_filex: ^4.5.0        # APK फाइल को सिस्टम पैकेज इंस्टॉलर में खोलने के लिए
   
 
   # The following adds the Cupertino Icons font to your application.
