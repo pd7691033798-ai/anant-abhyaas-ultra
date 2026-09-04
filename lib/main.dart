@@ -1098,4 +1098,294 @@ class _SovereignAppBuilderStudioState extends State<SovereignAppBuilderStudio> {
                       onPressed: _isLoading ? null : () => _analyzeAndRunDemo(repo['html_url'], repo['name']),
                       child: Text(repo['name'], style: const TextStyle(color: Colors.white, fontSize: 11)),
                     ),
+                    );
+                },
+              ),
+            ),
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF1E293B)),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: _isDemoReady && _webViewController != null
+                    ? WebViewWidget(controller: _webViewController!)
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.build_circle_outlined, color: Colors.white24, size: 50),
+                            SizedBox(height: 10),
+                            Text(
+                              "ऊपर से किसी रिपॉजिटरी को चुनें।\nउसका लाइव डेमो यहाँ लोड होगा।",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white38, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+            ),
+          ),
+          if (_isDemoReady)
+            Container(
+              padding: const EdgeInsets.all(12),
+              color: const Color(0xFF131B2E),
+              child: _downloadApkUrl == null
+                  ? SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF8B5CF6),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: _isLoading ? null : _buildStandaloneApk,
+                        icon: const Icon(Icons.android, color: Colors.white),
+                        label: Text(
+                          "डेमो सही है: '$_selectedRepoName' का APK बनाएं",
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    )
+                  : SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF00FFCC),
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: _downloadAndInstallApk,
+                        icon: const Icon(Icons.download),
+                        label: Text(
+                          "डाउनलोड करें: $_selectedRepoName.apk",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ==========================================
+// 7. जेमिनी AI चैट व क्विक स्कैनर
+// ==========================================
+class GeminiChatDashboard extends StatefulWidget {
+  const GeminiChatDashboard({super.key});
+
+  @override
+  State<GeminiChatDashboard> createState() => _GeminiChatDashboardState();
+}
+
+class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
+  final TextEditingController _msgController = TextEditingController();
+  final TextEditingController _repoController = TextEditingController();
+
+  final List<Map<String, String>> _messages = [
+    {
+      "sender": "agent",
+      "text": "नमस्ते मास्टर! अनंत अभ्यास अल्ट्रा सॉवरन कोर सक्रिय है। आप मुझसे चैट कर सकते हैं या किसी भी गिटहब रिपॉजिटरी का त्वरित विश्लेषण ले सकते हैं।"
+    }
+  ];
+  bool _isSending = false;
+
+  @override
+  void dispose() {
+    _msgController.dispose();
+    _repoController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendMessage(String text) async {
+    final cleanText = text.trim();
+    if (cleanText.isEmpty || _isSending) return;
+
+    setState(() {
+      _messages.add({"sender": "user", "text": cleanText});
+      _isSending = true;
+    });
+    _msgController.clear();
+
+    try {
+      final uri = Uri.https(
+        'anant-abhyaas-ultra.onrender.com',
+        '/api/agent-chat',
+        {'msg': cleanText},
+      );
+
+      final res = await http.get(uri);
+
+      if (!mounted) return;
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(res.bodyBytes));
+        setState(() {
+          _messages.add({
+            "sender": "agent",
+            "text": data['response']?.toString() ?? 'एजेंट्स ने प्रतिक्रिया दी।'
+          });
+        });
+      } else {
+        setState(() {
+          _messages.add({"sender": "agent", "text": "त्रुटि: कोड ${res.statusCode}"});
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _messages.add({"sender": "agent", "text": "त्रुटि: सर्वर से संपर्क विफल।"});
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isSending = false);
+      }
+    }
+  }
+
+  Future<void> _runGitHubScanAndSandbox(String repoUrl) async {
+    final cleanRepo = repoUrl.trim();
+    if (cleanRepo.isEmpty || _isSending) return;
+
+    setState(() {
+      _messages.add({"sender": "user", "text": "GitHub Scan request: $cleanRepo"});
+      _isSending = true;
+    });
+
+    try {
+      final uri = Uri.https(
+        'anant-abhyaas-ultra.onrender.com',
+        '/api/scan-github',
+        {'repo': cleanRepo},
+      );
+
+      final res = await http.get(uri);
+
+      if (!mounted) return;
+
+      if (res.statusCode == 200) {
+        setState(() {
+          _messages.add({"sender": "agent", "text": utf8.decode(res.bodyBytes)});
+        });
+      } else {
+        setState(() {
+          _messages.add({"sender": "agent", "text": "स्कैन विफल: कोड ${res.statusCode}"});
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _messages.add({"sender": "agent", "text": "स्कैनिंग असफल।"});
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isSending = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('सॉवरन कमांड चैट'),
+        backgroundColor: const Color(0xFF131B2E),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.security, color: Color(0xFF00FFCC)),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: const Color(0xFF131B2E),
+                  title: const Text('त्वरित GitHub स्कैन', style: TextStyle(color: Colors.white)),
+                  content: TextField(
+                    controller: _repoController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      hintText: 'उदा: https://github.com/user/repo',
+                      hintStyle: TextStyle(color: Colors.white38),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('रद्द करें')),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6)),
+                      onPressed: () {
+                        final repo = _repoController.text;
+                        Navigator.pop(context);
+                        _runGitHubScanAndSandbox(repo);
+                        _repoController.clear();
+                      },
+                      child: const Text('स्कैन चलाएं'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          )
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final msg = _messages[index];
+                final isUser = msg['sender'] == 'user';
+                return Align(
+                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isUser ? const Color(0xFF8B5CF6) : const Color(0xFF131B2E),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(msg['text'] ?? '', style: const TextStyle(fontSize: 13, color: Colors.white)),
+                  ),
+                );
+              },
+            ),
+          ),
+          if (_isSending) const LinearProgressIndicator(color: Color(0xFF00FFCC)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            color: const Color(0xFF131B2E),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _msgController,
+                    style: const TextStyle(color: Colors.white),
+                    onSubmitted: (val) => _sendMessage(val),
+                    decoration: const InputDecoration(
+                      hintText: 'यहाँ कमांड टाइप करें...',
+                      border: InputBorder.none,
+                      hintStyle: TextStyle(color: Colors.white38),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.send, color: Color(0xFF00FFCC)),
+                  onPressed: _isSending ? null : () => _sendMessage(_msgController.text),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
              
