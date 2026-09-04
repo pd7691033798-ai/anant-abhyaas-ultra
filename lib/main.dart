@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:local_auth/local_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const AnantUltraApp());
 }
 
 class AnantUltraApp extends StatelessWidget {
-  const AnantUltraApp({Key? key}) : super(key: key);
+  const AnantUltraApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +21,7 @@ class AnantUltraApp extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF0B0F19),
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF8B5CF6), // Dribbble पर्पल थीम
+          primary: Color(0xFF8B5CF6),
           secondary: Color(0xFF00FFCC),
         ),
       ),
@@ -60,8 +62,7 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
 
   Future<void> _triggerBiometricAuth() async {
     try {
-      final canCheck =
-          await auth.canCheckBiometrics || await auth.isDeviceSupported();
+      final canCheck = await auth.canCheckBiometrics || await auth.isDeviceSupported();
       if (!canCheck) {
         if (!mounted) return;
         setState(() {
@@ -122,14 +123,11 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200 &&
-          data['status'] == 'HANDSHAKE_VERIFIED') {
+      if (response.statusCode == 200 && data['status'] == 'HANDSHAKE_VERIFIED') {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const MasterNavigationHub(),
-          ),
+          MaterialPageRoute(builder: (context) => const MasterNavigationHub()),
         );
       } else if (mounted) {
         setState(() {
@@ -158,26 +156,14 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.shield_outlined,
-                size: 80,
-                color: Color(0xFF00FFCC),
-              ),
+              const Icon(Icons.shield_outlined, size: 80, color: Color(0xFF00FFCC)),
               const SizedBox(height: 16),
               const Text(
                 'ANANT ABHYAAS ULTRA',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                ),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 2),
               ),
               const SizedBox(height: 8),
-              Text(
-                _statusMessage,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
-              ),
+              Text(_statusMessage, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70, fontSize: 14)),
               const SizedBox(height: 32),
               if (!_biometricPassed)
                 ElevatedButton.icon(
@@ -193,14 +179,13 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
                 TextField(
                   controller: _keyController,
                   obscureText: true,
+                  style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: '256-बिट मास्टर की (Admin Key)',
                     prefixIcon: const Icon(Icons.vpn_key),
                     filled: true,
                     fillColor: const Color(0xFF1E293B),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -212,16 +197,11 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF00FFCC),
                       foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.black)
-                        : const Text(
-                            'ब्लॉकचेन हैंडशेक व अनलॉक',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                        : const Text('ब्लॉकचेन हैंडशेक व अनलॉक', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -234,21 +214,22 @@ class _SecurityGateScreenState extends State<SecurityGateScreen> {
 }
 
 // ==========================================
-// 2. मास्टर नेविगेशन हब (Dribbble Style)
+// 2. मास्टर नेविगेशन हब (3 टैब: डैशबोर्ड, सैंडबॉक्स/बिल्डर, AI चैट)
 // ==========================================
 class MasterNavigationHub extends StatefulWidget {
-  const MasterNavigationHub({Key? key}) : super(key: key);
+  const MasterNavigationHub({super.key});
 
   @override
-  _MasterNavigationHubState createState() => _MasterNavigationHubState();
+  State<MasterNavigationHub> createState() => _MasterNavigationHubState();
 }
 
 class _MasterNavigationHubState extends State<MasterNavigationHub> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    const SovereignDashboard(),
-    const GeminiChatDashboard(),
+  final List<Widget> _pages = const [
+    SovereignDashboard(),
+    SovereignAppBuilderStudio(),
+    GeminiChatDashboard(),
   ];
 
   @override
@@ -260,20 +241,11 @@ class _MasterNavigationHubState extends State<MasterNavigationHub> {
         backgroundColor: const Color(0xFF131B2E),
         selectedItemColor: const Color(0xFF8B5CF6),
         unselectedItemColor: Colors.white54,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onTap: (index) => setState(() => _currentIndex = index),
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.grid_view),
-            label: 'डैशबोर्ड',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            label: 'सॉवरन AI चैट',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: 'डैशबोर्ड'),
+          BottomNavigationBarItem(icon: Icon(Icons.handyman_outlined), label: 'ऐप बिल्डर सैंडबॉक्स'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'सॉवरन AI चैट'),
         ],
       ),
     );
@@ -281,13 +253,13 @@ class _MasterNavigationHubState extends State<MasterNavigationHub> {
 }
 
 // ==========================================
-// 3. डायरेक्टिव्स और ऑटो-अपडेट सक्षम डैशबोर्ड
+// 3. डैशबोर्ड (ओवरफ़्लो फिक्स्ड + OTA चेकर)
 // ==========================================
 class SovereignDashboard extends StatefulWidget {
-  const SovereignDashboard({Key? key}) : super(key: key);
+  const SovereignDashboard({super.key});
 
   @override
-  _SovereignDashboardState createState() => _SovereignDashboardState();
+  State<SovereignDashboard> createState() => _SovereignDashboardState();
 }
 
 class _SovereignDashboardState extends State<SovereignDashboard> {
@@ -295,28 +267,29 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
   List directives = [];
   bool isLoading = true;
 
-  final String currentAppVersion = "1.0.0"; // आपके वर्तमान ऐप का वर्जन
+  final String currentAppVersion = "1.0.0";
   final String renderBaseUrl = "https://anant-abhyaas-ultra.onrender.com";
 
   @override
   void initState() {
     super.initState();
     fetchSystemData();
-    checkForUpdates(); // ऐप खुलते ही ऑटो-अपडेट चेक करेगा
+    checkForUpdates();
   }
 
   Future<void> fetchSystemData() async {
     try {
       final directivesRes = await http.get(Uri.parse('$renderBaseUrl/api/directives'));
-
       if (directivesRes.statusCode == 200) {
+        if (!mounted) return;
         setState(() {
           systemStatus = "AIR-GAPPED ULTRA ACTIVE";
-          directives = json.decode(directivesRes.body);
+          directives = json.decode(utf8.decode(directivesRes.bodyBytes));
           isLoading = false;
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         systemStatus = "Connection Failed: $e";
         isLoading = false;
@@ -324,24 +297,19 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
     }
   }
 
-  // OTA ऑटो-अपडेट चेकिंग फंक्शन
   Future<void> checkForUpdates() async {
     try {
-      // आप अपने रेंडर पर एक छोटा वर्जन एपीआई बना सकते हैं, या वर्तमान वर्जन की तुलना कर सकते हैं
       final res = await http.get(Uri.parse('$renderBaseUrl/api/version'));
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
+        final data = jsonDecode(utf8.decode(res.bodyBytes));
         String serverVersion = data['engine_version'] ?? "v1.0.0-PROD-STEALTH";
 
-        // यदि सर्वर पर नया वर्जन उपलब्ध हो
         if (!serverVersion.contains(currentAppVersion)) {
           if (!mounted) return;
           showUpdateDialog(context);
         }
       }
-    } catch (_) {
-      // यदि चेक फेल हो जाए तो इग्नोर करें
-    }
+    } catch (_) {}
   }
 
   void showUpdateDialog(BuildContext context) {
@@ -352,7 +320,7 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
         backgroundColor: const Color(0xFF131B2E),
         title: const Text('🚀 नया OTA अपडेट उपलब्ध है', style: TextStyle(color: Color(0xFF00FFCC))),
         content: const Text(
-          'सिस्टम में नया मिलिट्री-ग्रेड अपडेट जारी किया गया है। बिना Codemagic खोले सीधे नया APK डाउनलोड करने के लिए नीचे क्लिक करें।',
+          'सिस्टम में नया अपडेट उपलब्ध है। सीधे नया APK डाउनलोड करने के लिए नीचे क्लिक करें।',
           style: TextStyle(color: Colors.white70, fontSize: 13),
         ),
         actions: [
@@ -364,7 +332,7 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6)),
             onPressed: () async {
               Navigator.pop(context);
-              final Uri apkUrl = Uri.parse('$renderBaseUrl/'); // यहाँ डायरेक्ट APK डाउनलोड लिंक दे सकते हैं
+              final Uri apkUrl = Uri.parse('$renderBaseUrl/');
               if (await canLaunchUrl(apkUrl)) {
                 await launchUrl(apkUrl, mode: LaunchMode.externalApplication);
               }
@@ -422,8 +390,6 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
                 ],
               ),
               const SizedBox(height: 20),
-
-              // Dribbble Banner Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
@@ -438,17 +404,15 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
-                    Text("OTA Auto-Update Active", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text("OTA Auto-Update Engine Active", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                     SizedBox(height: 4),
-                    Text("अब हर नए बदलाव पर ऐप खुद आपको अपडेट के लिए सूचित करेगा।", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                    Text("अनंत अभ्यास अल्ट्रा कोर अपडेट्स के लिए सीधे सर्वर से सिंक है।", style: TextStyle(color: Colors.white70, fontSize: 12)),
                   ],
                 ),
               ),
               const SizedBox(height: 20),
-
               const Text("मास्टर डायरेक्टिव्स मैट्रिक्स", style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
-
               Expanded(
                 child: isLoading
                     ? const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6)))
@@ -465,12 +429,16 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
                               border: Border.all(color: const Color(0xFF1E293B)),
                             ),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  "#${item['id']} ${item['codename']}",
-                                  style: const TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontWeight: FontWeight.w600),
+                                // ओवरफ़्लो रोकने के लिए Expanded लगाया गया
+                                Expanded(
+                                  child: Text(
+                                    "#${item['id']} ${item['codename']}",
+                                    style: const TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontWeight: FontWeight.w600),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
+                                const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                   decoration: BoxDecoration(
@@ -478,7 +446,7 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
-                                    item['status'],
+                                    item['status']?.toString() ?? '',
                                     style: const TextStyle(color: Color(0xFF34D399), fontSize: 9),
                                   ),
                                 ),
@@ -497,171 +465,97 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
 }
 
 // ==========================================
-// 4. जेमिनी-जैसी चैट और GitHub स्कैनर
+// 4. सॉवरन ऐप बिल्डर स्टूडियो (सैंडबॉक्स + लाइव डेमो + APK डाउनलोड)
 // ==========================================
-class GeminiChatDashboard extends StatefulWidget {
-  const GeminiChatDashboard({super.key});
+class SovereignAppBuilderStudio extends StatefulWidget {
+  const SovereignAppBuilderStudio({super.key});
 
   @override
-  State<GeminiChatDashboard> createState() => _GeminiChatDashboardState();
+  State<SovereignAppBuilderStudio> createState() => _SovereignAppBuilderStudioState();
 }
 
-class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
-  final TextEditingController _msgController = TextEditingController();
-  final TextEditingController _repoController = TextEditingController();
-  
-  final List<Map<String, String>> _messages = [
-    {
-      "sender": "agent",
-      "text": "नमस्ते मास्टर! अनंत अभ्यास अल्ट्रा सॉवरन कोर सक्रिय है। आप मुझसे सीधे चैट कर सकते हैं या ऊपर दिए गए सुरक्षा आइकॉन से GitHub रिपॉजिटरी स्कैन कर सकते हैं।"
-    }
-  ];
-  bool _isSending = false;
+class _SovereignAppBuilderStudioState extends State<SovereignAppBuilderStudio> {
+  final TextEditingController _tokenController = TextEditingController();
+  final String _backendUrl = 'https://anant-abhyaas-ultra.onrender.com';
 
-  Future<void> _sendMessage(String text) async {
-    if (text.trim().isEmpty) return;
+  List<dynamic> _repositories = [];
+  bool _isLoading = false;
+  String _pipelineStatus = "GitHub टोकन दर्ज करके रिपॉजिटरी लोड करें।";
 
-    setState(() {
-      _messages.add({"sender": "user", "text": text});
-      _isSending = true;
-    });
-    _msgController.clear();
+  String? _selectedRepoUrl;
+  String? _selectedRepoName;
+  String? _downloadApkUrl;
+  WebViewController? _webViewController;
+  bool _isDemoReady = false;
 
-    try {
-      final res = await http.get(
-        Uri.parse('https://anant-abhyaas-ultra.onrender.com/api/agent-chat?msg=$text'),
-      );
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        setState(() {
-          _messages.add({
-            "sender": "agent",
-            "text": data['response'] ?? 'एजेंट्स ने प्रतिक्रिया दी।'
-          });
-        });
-      }
-    } catch (_) {
-      setState(() {
-        _messages.add({"sender": "agent", "text": "त्रुटि: सर्वर से संपर्क विफल।"});
-      });
-    } finally {
-      setState(() { _isSending = false; });
-    }
+  @override
+  void dispose() {
+    _tokenController.dispose();
+    super.dispose();
   }
 
-  Future<void> _runGitHubScanAndSandbox(String repoUrl) async {
-    if (repoUrl.isEmpty) return;
+  Future<void> _fetchRepositories() async {
+    final token = _tokenController.text.trim();
+    if (token.isEmpty) return;
 
     setState(() {
-      _messages.add({"sender": "user", "text": "GitHub Scan request for: $repoUrl"});
-      _isSending = true;
+      _isLoading = true;
+      _pipelineStatus = "GitHub क्रेडेंशियल्स लोड किए जा रहे हैं...";
     });
 
     try {
       final res = await http.get(
-        Uri.parse('https://anant-abhyaas-ultra.onrender.com/api/scan-github?repo=$repoUrl'),
+        Uri.parse('https://api.github.com/user/repos?sort=updated&per_page=25'),
+        headers: {
+          'Authorization': 'token $token',
+          'Accept': 'application/vnd.github.v3+json',
+        },
       );
+
       if (res.statusCode == 200) {
         setState(() {
-          _messages.add({"sender": "agent", "text": res.body});
+          _repositories = jsonDecode(res.body);
+          _pipelineStatus = "रिपॉजिटरी लोड हो गईं। जिसका ऐप बनाना है उसे चुनें।";
         });
+      } else {
+        setState(() => _pipelineStatus = "GitHub प्रमाणीकरण विफल: टोकन अमान्य है।");
       }
-    } catch (_) {
-      setState(() {
-        _messages.add({"sender": "agent", "text": "स्कैनिंग असफल।"});
-      });
+    } catch (e) {
+      setState(() => _pipelineStatus = "कनेक्शन त्रुटि: $e");
     } finally {
-      setState(() { _isSending = false; });
+      setState(() => _isLoading = false);
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('सॉवरन कमांड चैट'),
-        backgroundColor: const Color(0xFF131B2E),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.security, color: Color(0xFF00FFCC)),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: const Color(0xFF131B2E),
-                  title: const Text('GitHub स्कैन'),
-                  content: TextField(
-                    controller: _repoController,
-                    decoration: const InputDecoration(hintText: 'उदा: https://github.com/user/repo'),
-                  ),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('रद्द करें')),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6)),
-                      onPressed: () {
-                        final repo = _repoController.text.trim();
-                        Navigator.pop(context);
-                        _runGitHubScanAndSandbox(repo);
-                        _repoController.clear();
-                      },
-                      child: const Text('स्कैन चलाएं'),
-                    ),
-                  ],
-                ),
-              );
-            },
-          )
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                final isUser = msg['sender'] == 'user';
-                return Align(
-                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isUser ? const Color(0xFF8B5CF6) : const Color(0xFF131B2E),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(msg['text']!, style: const TextStyle(fontSize: 13, color: Colors.white)),
-                  ),
-                );
-              },
-            ),
-          ),
-          if (_isSending) const LinearProgressIndicator(color: Color(0xFF00FFCC)),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            color: const Color(0xFF131B2E),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _msgController,
-                    decoration: const InputDecoration(
-                      hintText: 'यहाँ कमांड टाइप करें...',
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send, color: Color(0xFF00FFCC)),
-                  onPressed:
-                  _isSending ? null : () => _sendMessage(_msgController.text),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+  Future<void> _analyzeAndRunDemo(String repoUrl, String repoName) async {
+    setState(() {
+      _selectedRepoUrl = repoUrl;
+      _selectedRepoName = repoName;
+      _isLoading = true;
+      _isDemoReady = false;
+      _downloadApkUrl = null;
+      _pipelineStatus = "चरण 1/2: '$repoName' का कोड विश्लेषण और रिपेयर जारी...";
+    });
+
+    try {
+      final buildRes = await http.post(
+        Uri.parse('$_backendUrl/api/builder/prepare-demo'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'repo': repoUrl, 'name': repoName}),
+      );
+
+      if (buildRes.statusCode == 200) {
+        final data = jsonDecode(buildRes.body);
+        final demoUrl = data['demo_url'];
+
+        final controller = WebViewController()
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..loadRequest(Uri.parse(demoUrl));
+
+        setState(() {
+          _webViewController = controller;
+          _isDemoReady = true;
+          _pipelineStatus = "चरण 2/2: डेमो तैयार है! स्क्रीन पर टेस्ट करें, फिर नीचे 'नया APK बनाएं' दबाएं।";
+        });
+      } else {
+        setState(() => _pipelineStatus = "डेमो तैयार करन
