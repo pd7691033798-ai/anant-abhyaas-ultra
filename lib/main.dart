@@ -654,7 +654,8 @@ class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.send, color: Color(0xFF00FFCC)),
-                  onPressed: () => _sendMessage(_msgController.text),
+                  onPressed:
+                  _isSending ? null : () => _sendMessage(_msgController.text),
                 ),
               ],
             ),
@@ -663,4 +664,4 @@ class _GeminiChatDashboardState extends State<GeminiChatDashboard> {
       ),
     );
   }
-  
+}
