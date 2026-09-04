@@ -547,6 +547,16 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 	if engineVersion == "" {
 		engineVersion = "v1.0.1-PROD-STEALTH"
 	}
+	var engineVersion string
+	if len(commitSHA) >= 7 {
+		// कमिट के शुरुआती 7 अक्षर लेकर डायनामिक वर्जन बनाएं
+		engineVersion = fmt.Sprintf("v1.0.0-%s", commitSHA[:7])
+	} else if commitSHA != "" {
+		engineVersion = fmt.Sprintf("v1.0.0-%s", commitSHA)
+	} else {
+		// लोकल टेस्टिंग या वेरिएबल अनुपलब्ध होने पर टाइमस्टैम्प आधारित डायनामिक फॉलबैक
+		engineVersion = fmt.Sprintf("v1.0.0-LIVE-%d", time.Now().Unix())
+	}
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"system_name":       "ANANT_ABHYAAS_ULTRA",
 		"engine_version":    "v1.0.1-PROD-STEALTH",
