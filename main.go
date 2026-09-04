@@ -546,7 +546,8 @@ func adminHandshakeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	func versionHandler(w http.ResponseWriter, r *http.Request) {
+	
+func versionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	commitSHA := os.Getenv("RENDER_GIT_COMMIT")
