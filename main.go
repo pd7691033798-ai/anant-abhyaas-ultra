@@ -558,8 +558,7 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 		"system_name":       "ANANT_ABHYAAS_ULTRA",
 		"engine_version":    engineVersion,
 		"commit_hash":       commitSHA,
-		"min_android_os":    "Android 12 (API 31)",
-		"target_android_os": "Android 15/16 (API 
+		"min_android_os":    "Android 12 (API 31)", 
 		"target_android_os": "Android 15/16 (API 35)",
 		"security_mode":     "AIR_GAP_ZERO_TRUST_DUAL_FACE",
 	})
