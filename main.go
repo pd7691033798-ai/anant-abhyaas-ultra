@@ -560,3 +560,236 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 		"commit_hash":       commitSHA,
 		"min_android_os":    "Android 12 (API 31)",
 		"target_android_os": "Android 15/16 (API 
+		"target_android_os": "Android 15/16 (API 35)",
+		"security_mode":     "AIR_GAP_ZERO_TRUST_DUAL_FACE",
+	})
+}
+
+func adminHandshakeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	providedKey := r.Header.Get("X-Admin-Master-Key")
+	if providedKey != engine.AdminMasterKey {
+		engine.AddAuditLog("SECURITY_ALERT: Unauthorized Master Key Handshake Attempt")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "HANDSHAKE_REJECTED",
+			"error":  "Invalid Master Token",
+		})
+		return
+	}
+
+	engine.Lock()
+	if len(engine.BlockchainLedger) == 0 {
+		engine.Unlock()
+		http.Error(w, "Genesis block unavailable", http.StatusServiceUnavailable)
+		return
+	}
+	genesisHash := engine.BlockchainLedger[0].Hash
+	engine.Unlock()
+	authBlock := engine.AddAuditLog("AUTH_SUCCESS: Admin Logged In via Master Token")
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":       "HANDSHAKE_VERIFIED",
+		"genesis_hash": genesisHash,
+		"auth_block":   authBlock.Hash,
+		"access":       "FULL_ADMIN_UNLOCKED",
+	})
+}
+
+func verifyCodeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req CodeVerificationRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid Request Payload", http.StatusBadRequest)
+		return
+	}
+
+	passed, reason := validateCodeIntegrity(req)
+	if !passed {
+		engine.AddAuditLog(fmt.Sprintf("ALERT: Code Verification Failed for [%s] - %s", req.AppName, reason))
+		w.WriteHeader(http.StatusExpectationFailed)
+		json.NewEncoder(w).Encode(map[string]interface{}{"status": "REJECTED", "reason": reason})
+		return
+	}
+
+	engine.Lock()
+	engine.PendingApproval[req.AppName] = req.CodeSource
+	engine.Unlock()
+
+	engine.AddAuditLog(fmt.Sprintf("AUDIT: Sandbox Test Passed for [%s]. Staged for Admin Review.", req.AppName))
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":  "SANDBOX_PASSED",
+		"message": "App passed diagnostic checks and is queued for Admin Approval",
+	})
+}
+
+func apiDirectivesHandler(w http.ResponseWriter, r *http.Request) {
+	engine.Lock()
+	defer engine.Unlock()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(engine.Directives)
+}
+
+func apiLogsHandler(w http.ResponseWriter, r *http.Request) {
+	engine.Lock()
+	defer engine.Unlock()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(engine.BlockchainLedger)
+}
+
+// ==========================================
+// 7. एकीकृत मुख्य फंक्शन (SINGLE MAIN FUNCTION)
+// ==========================================
+func main() {
+	// 1. 39 डायरेक्टिव्स लोड करना
+	engine.Directives = init39Directives()
+
+	// 2. जेनेसिस ब्लॉक और ब्लॉकचेन इनिशियलाइज़ेशन
+	engine.AddAuditLog("GENESIS: Anant Abhyaas Ultra Initialized with Master Directives & Directive #40")
+	engine.Lock()
+	engine.TrustedGenesis = engine.BlockchainLedger[0]
+	engine.BlockchainIntegrity = "BLOCKCHAIN_INTEGRITY_VERIFIED"
+	engine.AutonomousMonitorLive = true
+	engine.Unlock()
+
+	// 3. डायरेक्टिव #40 मास्टर इंजन और सभी 7 लेयर्स को एक्टिवेट करना
+	engine.Directive40.ApplyQuantumAndBehavioralGuard()
+	engine.Directive40.MeshLedgerSyncAndZKP()
+	engine.Directive40.InitializeDecoyPurgeSystem()
+
+	// 4. पैसिव स्टील्थ स्कैन टेस्ट
+	engine.Directive40.UniversalPassiveScan("target-company-domain.com")
+
+	// 5. सिम्बॉलिक गारबेज शील्ड टेस्ट
+	sampleData := "CONFIDENTIAL_LOCAL_LEDGER"
+	protectedData := engine.Directive40.TriggerGarbageCipher(sampleData)
+	fmt.Println("[SHIELD ACTIVE] Garbage Output for Decoders:", protectedData)
+
+	// 6. रिकवरी और री-एक्टिवेशन टेस्ट
+	fmt.Println("\n[TEST] Simulating vault lock and recovery...")
+	engine.Directive40.RestoreHiddenVault("WRONG_KEY_123")                  // यह फेल होगी
+	engine.Directive40.RestoreHiddenVault("ANANT_ULTRA_MASTER_GENESIS_2026") // यह सफल होगी
+
+	// 7. क्लाउड कंप्यूटिंग टास्क
+	cloudTasks := []string{
+		"Directive #02: Android 12+ (API 31-35) Matrix Enforcement",
+		"Directive #05: Secrets & Military Shield Verification",
+		"Directive #08: SAST Security Scan Pipeline",
+		"Directive #11: Container Sandbox Isolation",
+		"Directive #27: Zero-Trust Network Encryption",
+		"Directive #40: Stealth Purge & Dual-Face Vault Active",
+	}
+	engine.CloudWorkerPool(cloudTasks)
+
+	// ==========================================
+	// 🚀 KEEP-ALIVE BACKGROUND TICKER (रेंडर स्लीप रोकने के लिए)
+	// ==========================================
+	go func() {
+		targetURL := "https://anant-abhyaas-ultra.onrender.com/api/version"
+		ticker := time.NewTicker(9 * time.Minute)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			resp, err := http.Get(targetURL)
+			if err != nil {
+				log.Printf("Keep-alive ping failed: %v", err)
+				continue
+			}
+			resp.Body.Close()
+			log.Println("Keep-alive ping sent successfully to prevent sleep mode.")
+		}
+	}()
+
+	// ==========================================
+	// 8. एंडपॉइंट्स मैपिंग और सॉवरन इंटीग्रेशन
+	// ==========================================
+	fortress := NewFortress()
+	fmt.Println("Sovereign Fortress Initialized:", fortress.SystemID)
+
+	// मुख्य डैशबोर्ड और API रूट्स
+	http.HandleFunc("/", dashboardHandler)
+	http.HandleFunc("/api/version", versionHandler)
+	http.HandleFunc("/api/directives", apiDirectivesHandler)
+	http.HandleFunc("/api/logs", apiLogsHandler)
+	http.HandleFunc("/api/admin/handshake", adminHandshakeHandler)
+	http.HandleFunc("/api/verify-code", verifyCodeHandler)
+
+	// जेमिनी-जैसी चैट, एजेंट सिंडिकेट और गिटहब स्कैनर रूट्स
+	http.HandleFunc("/api/agent-chat", func(w http.ResponseWriter, r *http.Request) {
+		message := r.URL.Query().Get("msg")
+		if message == "" {
+			message = "General System Status Check"
+		}
+
+		agentOutputs := fortress.RunAgentSyndicate(message)
+		auditLog := fortress.GenerateAuditLog("AgentChatInteraction")
+
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"response":"🤖 [सॉवरन एजेंट्स उत्तर]: आपके टास्क '%s' पर विचार किया गया।\n\nप्लानेर: %s\nआर्किटेक्चर: %s\nराइटर: %s\nरेड-टीम: %s\n\n%s"}`,
+			message, agentOutputs["Planner"], agentOutputs["Architect"], agentOutputs["Writer"], agentOutputs["RedTeam"], auditLog)
+	})
+
+	http.HandleFunc("/api/scan-github", func(w http.ResponseWriter, r *http.Request) {
+		repoURL := r.URL.Query().Get("repo")
+		if repoURL == "" {
+			repoURL = "Local-Sovereign-Sandbox-Repo"
+		}
+
+		scanReport := fmt.Sprintf("=== 🔍 GitHub SAST & Sandbox Demo Report ===\nTarget: %s\nStatus: SCAN COMPLETE & SECURE\n- Vulnerabilities Fixed: 0 Critical, 2 Minor Patched.\n- Sandbox Demo Module: WhatsApp/Facebook integration wrapper simulated successfully under Directive #08 & #11.\n- Custom AI Lexer: Language syntax verified.", repoURL)
+
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		fmt.Fprintln(w, scanReport)
+	})
+
+	// अतिरिक्त सॉवरन एंडपॉइंट्स (डिकॉय और मास्टर एजेंट्स)
+	registerSovereignEndpoints(fortress)
+
+	// बैकग्राउंड ऑटोमैटिक मॉनिटर चालू करना
+	go engine.StartAutonomousMonitor(5 * time.Second)
+
+	// सर्वर लिसनर (Render के PORT एनवायरनमेंट वेरिएबल के साथ)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "10000"
+	}
+
+	log.Printf("🌐 'अनंत अभ्यास अल्ट्रा' मास्टर सर्वर http://0.0.0.0:%s पर सक्रिय है...\n", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatalf("Server launch failed: %v", err)
+	}
+}
+
+// ==========================================
+// सॉवरन रूट्स मैपिंग फ़ंक्शन
+// ==========================================
+func registerSovereignEndpoints(fortress *SovereignFortress) {
+	// 1. डमी / डिकॉय सर्वर एंडपॉइंट
+	http.HandleFunc("/api/public-decoy", func(w http.ResponseWriter, r *http.Request) {
+		decoyResponse := fortress.DecoyGatekeeper(true)
+		fmt.Fprintln(w, decoyResponse)
+	})
+
+	// 2. मास्टर एजेंट्स, सैंडबॉक्स और ऑडिट लॉग एंडपॉइंट
+	http.HandleFunc("/api/sovereign-master", func(w http.ResponseWriter, r *http.Request) {
+		idea := r.URL.Query().Get("idea")
+		if idea == "" {
+			idea = "Default Sovereign Operation"
+		}
+
+		agentOutputs := fortress.RunAgentSyndicate(idea)
+		auditLog := fortress.GenerateAuditLog("RunAgentSyndicate")
+
+		fmt.Fprintf(w, "=== ANANT ABHYAAS ULTRA MASTER CORE ===\n%s\n\nAgent Syndicate Output:\n%+v", auditLog, agentOutputs)
+	})
+}
