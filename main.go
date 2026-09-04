@@ -540,38 +540,39 @@ func dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, engine)
 }
 
-func versionHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	// Render से Git कमिट आईडी उठाएगा, अगर खाली हो तो डिफ़ॉल्ट रखेगा
-	engineVersion := os.Getenv("RENDER_GIT_COMMIT")
-	if engineVersion == "" {
-		engineVersion = "v1.0.1-PROD-STEALTH"
-	}
-	var engineVersion string
-	if len(commitSHA) >= 7 {
-		// कमिट के शुरुआती 7 अक्षर लेकर डायनामिक वर्जन बनाएं
-		engineVersion = fmt.Sprintf("v1.0.0-%s", commitSHA[:7])
-	} else if commitSHA != "" {
-		engineVersion = fmt.Sprintf("v1.0.0-%s", commitSHA)
-	} else {
-		// लोकल टेस्टिंग या वेरिएबल अनुपलब्ध होने पर टाइमस्टैम्प आधारित डायनामिक फॉलबैक
-		engineVersion = fmt.Sprintf("v1.0.0-LIVE-%d", time.Now().Unix())
-	}
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"system_name":       "ANANT_ABHYAAS_ULTRA",
-		"engine_version":    "v1.0.1-PROD-STEALTH",
-		"min_android_os":    "Android 12 (API 31)",
-		"target_android_os": "Android 15/16 (API 35)",
-		"security_mode":     "AIR_GAP_ZERO_TRUST_DUAL_FACE",
-	})
-}
 
 func adminHandshakeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
+func versionHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
+	// Render से Git कमिट आईडी प्राप्त करें
+	commitSHA := os.Getenv("RENDER_GIT_COMMIT")
+
+	var engineVersion string
+	if len(commitSHA) >= 7 {
+		// कमिट के पहले 7 अक्षर लेकर डायनामिक वर्जन बनाएं (उदा: v1.0.0-2959cf3)
+		engineVersion = fmt.Sprintf("v1.0.0-%s", commitSHA[:7])
+	} else if commitSHA != "" {
+		engineVersion = fmt.Sprintf("v1.0.0-%s", commitSHA)
+	} else {
+		// अगर कमिट न मिले तो टाइमस्टैम्प आधारित डायनामिक फॉलबैक
+		engineVersion = fmt.Sprintf("v1.0.0-LIVE-%d", time.Now().Unix())
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"system_name":       "ANANT_ABHYAAS_ULTRA",
+		"engine_version":    engineVersion,
+		"commit_hash":       commitSHA,
+		"min_android_os":    "Android 12 (API 31)",
+		"target_android_os": "Android 15/16 (API 35)",
+		"security_mode":     "AIR_GAP_ZERO_TRUST_DUAL_FACE",
+	})
+}
+	
 	providedKey := r.Header.Get("X-Admin-Master-Key")
 	if providedKey != engine.AdminMasterKey {
 		engine.AddAuditLog("SECURITY_ALERT: Unauthorized Master Key Handshake Attempt")
