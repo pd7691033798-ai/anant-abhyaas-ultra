@@ -270,7 +270,7 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
   List directives = [];
   bool isLoading = true;
 
-  final String currentAppVersion = "1.0.0";
+  final String currentAppVersion = ";
   final String renderBaseUrl = "https://anant-abhyaas-ultra.onrender.com";
 
   @override
