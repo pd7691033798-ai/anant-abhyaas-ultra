@@ -549,7 +549,7 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"system_name":       "ANANT_ABHYAAS_ULTRA",
-		"engine_version":    "v1.0.0-PROD-STEALTH",
+		"engine_version":    "v1.0.1-PROD-STEALTH",
 		"min_android_os":    "Android 12 (API 31)",
 		"target_android_os": "Android 15/16 (API 35)",
 		"security_mode":     "AIR_GAP_ZERO_TRUST_DUAL_FACE",
