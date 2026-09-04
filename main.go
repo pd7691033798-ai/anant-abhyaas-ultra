@@ -547,7 +547,7 @@ func adminHandshakeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-func versionHandler(w http.ResponseWriter, r *http.Request) {
+func VersionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	commitSHA := os.Getenv("RENDER_GIT_COMMIT")
