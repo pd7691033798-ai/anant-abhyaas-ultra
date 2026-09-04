@@ -540,14 +540,7 @@ func dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, engine)
 }
 
-
-func adminHandshakeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	
-func VersionHandler(w http.ResponseWriter, r *http.Request) {
+func versionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	commitSHA := os.Getenv("RENDER_GIT_COMMIT")
