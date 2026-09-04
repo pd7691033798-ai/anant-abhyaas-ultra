@@ -546,20 +546,17 @@ func adminHandshakeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-func versionHandler(w http.ResponseWriter, r *http.Request) {
+	func versionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Render से Git कमिट आईडी प्राप्त करें
 	commitSHA := os.Getenv("RENDER_GIT_COMMIT")
 
 	var engineVersion string
 	if len(commitSHA) >= 7 {
-		// कमिट के पहले 7 अक्षर लेकर डायनामिक वर्जन बनाएं (उदा: v1.0.0-2959cf3)
 		engineVersion = fmt.Sprintf("v1.0.0-%s", commitSHA[:7])
 	} else if commitSHA != "" {
 		engineVersion = fmt.Sprintf("v1.0.0-%s", commitSHA)
 	} else {
-		// अगर कमिट न मिले तो टाइमस्टैम्प आधारित डायनामिक फॉलबैक
 		engineVersion = fmt.Sprintf("v1.0.0-LIVE-%d", time.Now().Unix())
 	}
 
