@@ -542,6 +542,11 @@ func dashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 func versionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	// Render से Git कमिट आईडी उठाएगा, अगर खाली हो तो डिफ़ॉल्ट रखेगा
+	engineVersion := os.Getenv("RENDER_GIT_COMMIT")
+	if engineVersion == "" {
+		engineVersion = "v1.0.1-PROD-STEALTH"
+	}
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"system_name":       "ANANT_ABHYAAS_ULTRA",
 		"engine_version":    "v1.0.0-PROD-STEALTH",
