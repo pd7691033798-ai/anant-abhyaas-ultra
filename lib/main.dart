@@ -29,6 +29,9 @@ class AnantUltraApp extends StatelessWidget {
         ),
       ),
       home: const SecurityGateScreen(),
+      home: const DynamicServerDrivenScreen(
+        backendUrl: 'https://anant-abhyaas-ultra.onrender.com', // आपका Render सर्वर URL
+        ),
     );
   }
 }
