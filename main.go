@@ -750,7 +750,9 @@ func main() {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		fmt.Fprintln(w, scanReport)
 	})
+	
 	RegisterRepoEngineRoutes()
+	RegisterDynamicUIEngineRoutes()
 
 	// अतिरिक्त सॉवरन एंडपॉइंट्स (डिकॉय और मास्टर एजेंट्स)
 	registerSovereignEndpoints(fortress)
