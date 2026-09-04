@@ -307,7 +307,7 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
         final data = jsonDecode(utf8.decode(res.bodyBytes));
         String serverVersion = data['engine_version'] ?? "v1.0.0-PROD-STEALTH";
 
-        if (!serverVersion.contains(currentAppVersion)) {
+        if (serverVersion != currentAppVersion) {
           if (!mounted) return;
           showUpdateDialog(context);
         }
