@@ -636,3 +636,241 @@ class _WhatsAppSimulatorScreenState extends State<WhatsAppSimulatorScreen> {
     );
   }
 }
+// ==========================================
+// 5. डैशबोर्ड
+// ==========================================
+class SovereignDashboard extends StatefulWidget {
+  const SovereignDashboard({super.key});
+
+  @override
+  State<SovereignDashboard> createState() => _SovereignDashboardState();
+}
+
+class _SovereignDashboardState extends State<SovereignDashboard> {
+  String systemStatus = "Connecting to Sovereign Core...";
+  List directives = [];
+  bool isLoading = true;
+
+  final String currentAppVersion = "v1.0.0-LIVE";
+  final String renderBaseUrl = AnantUltraApp.serverBaseUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSystemData();
+    checkForUpdates();
+  }
+
+  Future<void> fetchSystemData() async {
+    try {
+      final directivesRes = await http.get(Uri.parse('$renderBaseUrl/api/directives'));
+      if (directivesRes.statusCode == 200) {
+        if (!mounted) return;
+        setState(() {
+          systemStatus = "AIR-GAPPED ULTRA ACTIVE";
+          directives = json.decode(utf8.decode(directivesRes.bodyBytes));
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        systemStatus = "Connection Failed: $e";
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> checkForUpdates() async {
+    try {
+      final res = await http.get(Uri.parse('$renderBaseUrl/api/version'));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(res.bodyBytes));
+        String serverVersion = data['engine_version'] ?? "v1.0.0-PROD-STEALTH";
+
+        if (serverVersion != currentAppVersion) {
+          if (!mounted) return;
+          showUpdateDialog(context);
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> downloadAndInstallAPK(BuildContext dialogContext, String apkUrl) async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("नया अपडेट डाउनलोड हो रहा है... कृपया प्रतीक्षा करें")),
+      );
+
+      final response = await http.get(Uri.parse(apkUrl));
+      if (response.statusCode != 200) {
+        throw Exception("डाउनलोड विफल: सर्वर स्टेटस ${response.statusCode}");
+      }
+
+      final directory = await getTemporaryDirectory();
+      final filePath = "${directory.path}/update.apk";
+      final file = File(filePath);
+      await file.writeAsBytes(response.bodyBytes);
+
+      final result = await OpenFilex.open(filePath);
+      if (result.type != ResultType.done) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("इंस्टॉलेशन शुरू नहीं हो सका: ${result.message}")),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("अपडेट त्रुटि: $e")),
+      );
+    }
+  }
+
+  void showUpdateDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: const Color(0xFF131B2E),
+        title: const Text('🚀 नया OTA अपडेट उपलब्ध है', style: TextStyle(color: Color(0xFF00FFCC))),
+        content: const Text(
+          'सिस्टम में नया अपडेट उपलब्ध है। सीधे नया APK डाउनलोड करके इंस्टॉल करने के लिए नीचे क्लिक करें।',
+          style: TextStyle(color: Colors.white70, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('बाद में', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6)),
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              downloadAndInstallAPK(context, '$renderBaseUrl/');
+            },
+            child: const Text('अपडेट करें', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFF8B5CF6), width: 2),
+                        ),
+                        child: const CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Color(0xFF1E1B4B),
+                          child: Icon(Icons.security, color: Color(0xFF00FFCC), size: 18),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text("सॉवरन मास्टर", style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                          Text("Anant Abhyaas Ultra", style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E1B4B),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(systemStatus, style: const TextStyle(color: Color(0xFF34D399), fontSize: 10, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text("OTA Auto-Update Engine Active", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 4),
+                    Text("अनंत अभ्यास अल्ट्रा कोर अपडेट्स के लिए सीधे सर्वर से सिंक है।", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text("मास्टर डायरेक्टिव्स मैट्रिक्स", style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              Expanded(
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6)))
+                    : ListView.builder(
+                        itemCount: directives.length,
+                        itemBuilder: (context, index) {
+                          final item = directives[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF131B2E),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFF1E293B)),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "#${item['id']} ${item['codename']}",
+                                    style: const TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontWeight: FontWeight.w600),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF064E3B),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    item['status']?.toString() ?? '',
+                                    style: const TextStyle(color: Color(0xFF34D399), fontSize: 9),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
