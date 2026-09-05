@@ -753,6 +753,7 @@ func main() {
 	
 	RegisterRepoEngineRoutes()
 	RegisterDynamicUIEngineRoutes()
+	RegisterRepoEngineTwoRoutes()
 
 	// अतिरिक्त सॉवरन एंडपॉइंट्स (डिकॉय और मास्टर एजेंट्स)
 	registerSovereignEndpoints(fortress)
