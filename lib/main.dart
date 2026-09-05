@@ -1001,11 +1001,19 @@ class _SovereignAppBuilderStudioState extends State<SovereignAppBuilderStudio> {
     }
   }
 
-  Future<void> _downloadAndInstallApk() async {
-    if (_downloadApkUrl == null) return;
-    try {
+    Future<void> _downloadAndInstallApk() async {
+    if (_downloadApkUrl == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("$_selectedRepoName.apk डाउनलोड हो रहा है...")),
+        const SnackBar(content: Text("डाउनलोड URL मौजूद नहीं है")),
+      );
+      return;
+    }
+
+    try {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("${_selectedRepoName ?? 'App'}.apk डाउनलोड हो रहा है...")),
       );
 
       final response = await http.get(Uri.parse(_downloadApkUrl!));
@@ -1013,12 +1021,23 @@ class _SovereignAppBuilderStudioState extends State<SovereignAppBuilderStudio> {
         throw Exception("डाउनलोड विफल: स्टेटस ${response.statusCode}");
       }
 
+      // जांचें कि कंटेंट इमेज या टेक्स्ट तो नहीं है
+      final contentType = response.headers['content-type'] ?? '';
+      if (contentType.contains('text/html') || contentType.contains('image/')) {
+        throw Exception("अमान्य फ़ाइल: सर्वर ने APK की जगह $contentType भेजा है");
+      }
+
       final directory = await getTemporaryDirectory();
       final filePath = "${directory.path}/${_selectedRepoName ?? 'app'}.apk";
       final file = File(filePath);
       await file.writeAsBytes(response.bodyBytes);
 
-      final result = await OpenFilex.open(filePath);
+      // स्पष्ट MIME type के साथ पैकेज इंस्टॉलर चलाएं
+      final result = await OpenFilex.open(
+        filePath,
+        type: "application/vnd.android.package-archive",
+      );
+
       if (result.type != ResultType.done) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1028,10 +1047,11 @@ class _SovereignAppBuilderStudioState extends State<SovereignAppBuilderStudio> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("त्रुटि: $e")),
+        SnackBar(content: Text("त्रुटि: $e"), backgroundColor: Colors.red),
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
