@@ -3,6 +3,8 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    
 
 <!-- सीधे APK इंस्टॉल करने की अनिवार्य अनुमति -->
 <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
