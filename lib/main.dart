@@ -874,3 +874,374 @@ class _SovereignDashboardState extends State<SovereignDashboard> {
     );
   }
 }
+// ==========================================
+// 6. सॉवरन ऐप बिल्डर स्टूडियो (सैंडबॉक्स बटन सहित)
+// ==========================================
+class SovereignAppBuilderStudio extends StatefulWidget {
+  const SovereignAppBuilderStudio({super.key});
+
+  @override
+  State<SovereignAppBuilderStudio> createState() => _SovereignAppBuilderStudioState();
+}
+
+class _SovereignAppBuilderStudioState extends State<SovereignAppBuilderStudio> {
+  final TextEditingController _tokenController = TextEditingController();
+  final String _backendUrl = AnantUltraApp.serverBaseUrl;
+
+  List<dynamic> _repositories = [];
+  bool _isLoading = false;
+  String _pipelineStatus = "GitHub टोकन दर्ज करके रिपॉजिटरी लोड करें।";
+
+  String? _selectedRepoUrl;
+  String? _selectedRepoName;
+  String? _downloadApkUrl;
+  WebViewController? _webViewController;
+  bool _isDemoReady = false;
+
+  @override
+  void dispose() {
+    _tokenController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchRepositories() async {
+    final token = _tokenController.text.trim();
+    if (token.isEmpty) return;
+
+    setState(() {
+      _isLoading = true;
+      _pipelineStatus = "GitHub क्रेडेंशियल्स लोड किए जा रहे हैं...";
+    });
+
+    try {
+      final res = await http.get(
+        Uri.parse('https://api.github.com/user/repos?sort=updated&per_page=25'),
+        headers: {
+          'Authorization': 'token $token',
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      );
+
+      if (res.statusCode == 200) {
+        setState(() {
+          _repositories = jsonDecode(res.body);
+          _pipelineStatus = "रिपॉजिटरी लोड हो गईं। जिसका ऐप बनाना है उसे चुनें।";
+        });
+      } else {
+        setState(() => _pipelineStatus = "GitHub प्रमाणीकरण विफल: टोकन अमान्य है।");
+      }
+    } catch (e) {
+      setState(() => _pipelineStatus = "कनेक्शन त्रुटि: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _analyzeAndRunDemo(String repoUrl, String repoName) async {
+    setState(() {
+      _selectedRepoUrl = repoUrl;
+      _selectedRepoName = repoName;
+      _isLoading = true;
+      _isDemoReady = false;
+      _downloadApkUrl = null;
+      _pipelineStatus = "चरण 1/2: '$repoName' का कोड विश्लेषण और रिपेयर जारी...";
+    });
+
+    try {
+      final buildRes = await http.post(
+        Uri.parse('$_backendUrl/api/builder/prepare-demo'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'repo': repoUrl, 'name': repoName}),
+      );
+
+      if (buildRes.statusCode == 200) {
+        final data = jsonDecode(buildRes.body);
+        final demoUrl = data['demo_url'];
+
+        final controller = WebViewController()
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..loadRequest(Uri.parse(demoUrl));
+
+        setState(() {
+          _webViewController = controller;
+          _isDemoReady = true;
+          _pipelineStatus = "चरण 2/2: डेमो तैयार है! स्क्रीन पर टेस्ट करें, फिर नीचे 'नया APK बनाएं' दबाएं।";
+        });
+      } else {
+        setState(() => _pipelineStatus = "डेमो तैयार करने में विफलता: कोड त्रुटि ${buildRes.statusCode}");
+      }
+    } catch (e) {
+      setState(() => _pipelineStatus = "सैंडबॉक्स एरर: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _buildStandaloneApk() async {
+    if (_selectedRepoUrl == null) return;
+
+    setState(() {
+      _isLoading = true;
+      _pipelineStatus = "क्लाउड कंपाइलर सक्रिय: '$_selectedRepoName' का APK बिल्ड हो रहा है...";
+    });
+
+    try {
+      final apkRes = await http.post(
+        Uri.parse('$_backendUrl/api/builder/compile-apk'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'repo': _selectedRepoUrl,
+          'app_name': _selectedRepoName,
+        }),
+      );
+
+      if (apkRes.statusCode == 200) {
+        final data = jsonDecode(apkRes.body);
+        setState(() {
+          _downloadApkUrl = data['apk_download_url'];
+          _pipelineStatus = "बिल्ड सफल! '$_selectedRepoName' का APK तैयार है। नीचे से डाउनलोड करें।";
+        });
+      } else {
+        setState(() => _pipelineStatus = "APK कंपाइलेशन विफल रहा। कोड लॉग जांचें।");
+      }
+    } catch (e) {
+      setState(() => _pipelineStatus = "कंपाइलर एरर: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _downloadAndInstallApk() async {
+    if (_downloadApkUrl == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("डाउनलोड URL मौजूद नहीं है")),
+      );
+      return;
+    }
+
+    try {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("${_selectedRepoName ?? 'App'}.apk डाउनलोड हो रहा है...")),
+      );
+
+      final response = await http.get(Uri.parse(_downloadApkUrl!));
+      if (response.statusCode != 200) {
+        throw Exception("डाउनलोड विफल: स्टेटस ${response.statusCode}");
+      }
+
+      final contentType = response.headers['content-type'] ?? '';
+      if (contentType.contains('text/html') || contentType.contains('image/')) {
+        throw Exception("अमान्य फ़ाइल: सर्वर ने APK की जगह $contentType भेजा है");
+      }
+
+      final directory = await getTemporaryDirectory();
+      final filePath = "${directory.path}/${_selectedRepoName ?? 'app'}.apk";
+      final file = File(filePath);
+      await file.writeAsBytes(response.bodyBytes);
+
+      final result = await OpenFilex.open(
+        filePath,
+        type: "application/vnd.android.package-archive",
+      );
+
+      if (result.type != ResultType.done) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("इंस्टॉलेशन शुरू नहीं हो सका: ${result.message}")),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("त्रुटि: $e"), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0B0F19),
+      appBar: AppBar(
+        title: const Text('सॉवरन ऐप बिल्डर स्टूडियो', style: TextStyle(color: Colors.white, fontSize: 16)),
+        backgroundColor: const Color(0xFF131B2E),
+      ),
+      body: Column(
+        children: [
+          // ==========================================
+          // यहाँ जोड़ा गया सैंडबॉक्स बटन (त्वरित एक्सेस)
+          // ==========================================
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            color: const Color(0xFF075E54).withValues(alpha: 0.25),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Expanded(
+                  child: Text(
+                    "स्वायत्त सैंडबॉक्स स्टूडियो (WhatsApp व UI डेमो):",
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF075E54),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AutonomousSandboxScreen(
+                          repoName: _selectedRepoName ?? "anant-abhyaas-ultra",
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.rocket_launch, color: Colors.white, size: 16),
+                  label: const Text(
+                    "सैंडबॉक्स स्टूडियो",
+                    style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // GitHub टोकन बार
+          Container(
+            padding: const EdgeInsets.all(12),
+            color: const Color(0xFF131B2E),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _tokenController,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                    decoration: const InputDecoration(
+                      hintText: 'GitHub Personal Access Token (PAT)',
+                      hintStyle: TextStyle(color: Colors.white38),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00FFCC), foregroundColor: Colors.black),
+                  onPressed: _isLoading ? null : _fetchRepositories,
+                  child: const Text('सिंक करें', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: const Color(0xFF1E293B),
+            child: Text(
+              _pipelineStatus,
+              style: const TextStyle(color: Color(0xFF00FFCC), fontSize: 11, fontFamily: 'monospace'),
+            ),
+          ),
+          if (_isLoading) const LinearProgressIndicator(color: Color(0xFF8B5CF6), minHeight: 2),
+          if (_repositories.isNotEmpty)
+            Container(
+              height: 52,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _repositories.length,
+                itemBuilder: (context, index) {
+                  final repo = _repositories[index];
+                  final isSelected = _selectedRepoUrl == repo['html_url'];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: isSelected ? const Color(0xFF00FFCC) : const Color(0xFF8B5CF6)),
+                        backgroundColor: isSelected ? const Color(0xFF8B5CF6).withValues(alpha: 0.2) : Colors.transparent,
+                      ),
+                      onPressed: _isLoading ? null : () => _analyzeAndRunDemo(repo['html_url'], repo['name']),
+                      child: Text(repo['name'], style: const TextStyle(color: Colors.white, fontSize: 11)),
+                    ),
+                  );
+                },
+              ),
+            ),
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF1E293B)),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: _isDemoReady && _webViewController != null
+                    ? WebViewWidget(controller: _webViewController!)
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.build_circle_outlined, color: Colors.white24, size: 50),
+                            SizedBox(height: 10),
+                            Text(
+                              "ऊपर से किसी रिपॉजिटरी को चुनें।\nउसका लाइव डेमो यहाँ लोड होगा।",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white38, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+            ),
+          ),
+          if (_isDemoReady)
+            Container(
+              padding: const EdgeInsets.all(12),
+              color: const Color(0xFF131B2E),
+              child: _downloadApkUrl == null
+                  ? SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF8B5CF6),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: _isLoading ? null : _buildStandaloneApk,
+                        icon: const Icon(Icons.android, color: Colors.white),
+                        label: Text(
+                          "डेमो सही है: '$_selectedRepoName' का APK बनाएं",
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    )
+                  : SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF00FFCC),
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: _downloadAndInstallApk,
+                        icon: const Icon(Icons.download),
+                        label: Text(
+                          "डाउनलोड करें: $_selectedRepoName.apk",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+            ),
+        ],
+      ),
+    );
+  }
+}
