@@ -576,7 +576,7 @@ class _WhatsAppSimulatorScreenState extends State<WhatsAppSimulatorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    reurn Scaffold(
+    return Scaffold(
       backgroundColor: const Color(0xFF0B141A),
       appBar: AppBar(
         title: const Text("WhatsApp Simulator", style: TextStyle(color: Colors.white, fontSize: 16)),
