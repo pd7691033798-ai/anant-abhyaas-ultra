@@ -152,7 +152,7 @@ func CompileApkHandlerTwo(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":           "SUCCESS",
-		"apk_download_url": "https://anant-abhyaas-ultra.onrender.com/assets/logo.png",
+		"apk_download_url": "https://drive.google.com/uc?export=download&id=1qjFBSJ9T_mVo1U7Du1mSXwrGlQFpf1MI",
 	})
 }
 
