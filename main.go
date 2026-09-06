@@ -13,7 +13,7 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"my-project/engine"
+	"my-project/engine2"
 	
 )
 
@@ -697,15 +697,15 @@ func main() {
 	fmt.Println("Anant Abhyaas Ultra Master Engine starting...")
 
 	// 39 डायरेक्टिव्स लोड करना
-	engine.Directives = init39Directives()
+	engine2.Directives = init39Directives()
 
 	// जेनेसिस ब्लॉक
-	engine.AddAuditLog("GENESIS: Anant Abhyaas Ultra System Initialized with 39 Master Directives")
-	engine.Lock()
-	engine.TrustedGenesis = engine.BlockchainLedger[0]
-	engine.BlockchainIntegrity = "BLOCKCHAIN_INTEGRITY_VERIFIED"
-	engine.AutonomousMonitorLive = true
-	engine.Unlock()
+	engine2.AddAuditLog("GENESIS: Anant Abhyaas Ultra System Initialized with 39 Master Directives")
+	engine2.Lock()
+	engine2.TrustedGenesis = engine2.BlockchainLedger[0].Hash
+	engine2.BlockchainIntegrity = "BLOCKCHAIN_INTEGRITY_VERIFIED"
+	engine2.AutonomousMonitorLive = true
+	engine2.Unlock()
 
 	// क्लाउड कंप्यूटिंग टास्क
 	cloudTasks := []string{
@@ -716,15 +716,15 @@ func main() {
 		"Directive #27: Zero-Trust Network Encryption",
 		"Directive #39: Telemetry Sentinel Monitoring",
 	}
-	engine.CloudWorkerPool(cloudTasks)
+	engine2.CloudWorkerPool(cloudTasks)
 
 	// बैकग्राउंड ऑटोनॉमस मॉनिटर स्टार्ट करना
-	go engine.StartAutonomousMonitor(5 * time.Second)
+	go engine2.StartAutonomousMonitor(5 * time.Second)
 
 	// सर्वर रूट्स/UI इनिशियलाइज करना
-	engine.StartServer()
+	engine2.StartServer()
 
-	// पोर्ट सेट करके सर्वर लाइव करना (यह सब अब इसी फंक्शन के *अंदर* सुरक्षित है)
+	// पोर्ट सेट करके सर्वर लाइव करना
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
