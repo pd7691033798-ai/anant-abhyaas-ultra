@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"anant-abhyaas-ultra/engine"
+	
 )
 
 // ==========================================
@@ -692,6 +694,8 @@ func remediationStatusHandler(w http.ResponseWriter, r *http.Request) {
 // ==========================================
 
 func main() {
+	fmt.Println("Anant Abhyaas Ultra Master Engine starting on http://localhost:8080...")
+
 	// 39 डायरेक्टिव्स लोड करना
 	engine.Directives = init39Directives()
 
@@ -714,16 +718,12 @@ func main() {
 	}
 	engine.CloudWorkerPool(cloudTasks)
 
-	// एंडपॉइंट्स मैपिंग
-	http.HandleFunc("/", dashboardHandler)
-	http.HandleFunc("/api/version", versionHandler)
-	http.HandleFunc("/api/directives", apiDirectivesHandler)
-	http.HandleFunc("/api/logs", apiLogsHandler)
-	http.HandleFunc("/api/admin/handshake", adminHandshakeHandler)
-	http.HandleFunc("/api/admin/remediation-status", remediationStatusHandler)
-	http.HandleFunc("/api/verify-code", verifyCodeHandler)
-	http.HandleFunc("/api/admin/approve", adminApproveHandler)
-	http.HandleFunc("/api/admin/emergency-reset", emergencyRecoveryHandler)
+	// बैकग्राउंड ऑटोनॉमस मॉनिटर स्टार्ट करना
+	go engine.StartAutonomousMonitor(5 * time.Second)
+
+	// मास्टर इंजन और बटन-बेस्ड डैशबोर्ड सर्वर लॉन्च करना (यह सारे एंडपॉइंट्स और UI संभाल लेगा)
+	engine.StartServer()
+}
 
 	port := os.Getenv("PORT")
 	if port == "" {
