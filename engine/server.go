@@ -111,7 +111,8 @@ func StartServer() {
 		var p Payload
 		r.Body = http.MaxBytesReader(w, r.Body, 1048576)
 		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-			json.NewEncoder(w.Encode(map[string]string{"status": "error", "message": err.Error()}))
+			// यहाँ सही तरीका है json.NewEncoder(w).Encode लगाना
+			json.NewEncoder(w).Encode(map[string]string{"status": "error", "message": err.Error()})
 			return
 		}
 
@@ -121,10 +122,9 @@ func StartServer() {
 			Version:     p.Version,
 		}, p.Action)
 
-		json.NewEncoder(w.Encode(result))
+		// यहाँ भी सही एनकोडर लगा दिया है
+		json.NewEncoder(w).Encode(result)
 	})
 
 	http.Handle("/downloads/", http.StripPrefix("/downloads/", http.FileServer(http.Dir("./public_downloads"))))
-	http.ListenAndServe(":8080", nil)
 }
-
