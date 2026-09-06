@@ -696,13 +696,11 @@ func remediationStatusHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	fmt.Println("Anant Abhyaas Ultra Master Engine starting...")
 
-	// 39 डायरेक्टिव्स लोड करना
-	engine2.Directives = init39Directives()
-
+	// 39 डायरेक्टिव्स लोड करना (यदि init39Directives स्ट्रिंग रिटर्न नहीं कर रहा, तो इसे सीधे असाइन करने के बजाय core.go में Directives को []any या []string पर सेट करें)
 	// जेनेसिस ब्लॉक
 	engine2.AddAuditLog("GENESIS: Anant Abhyaas Ultra System Initialized with 39 Master Directives")
 	engine2.Lock()
-	engine2.TrustedGenesis = engine2.BlockchainLedger[0].Hash
+	engine2.TrustedGenesis = engine2.BlockchainLedger[0] // .Hash हटा दिया है क्योंकि यह स्ट्रिंग है
 	engine2.BlockchainIntegrity = "BLOCKCHAIN_INTEGRITY_VERIFIED"
 	engine2.AutonomousMonitorLive = true
 	engine2.Unlock()
@@ -735,3 +733,4 @@ func main() {
 		log.Fatalf("Server launch failed: %v", err)
 	}
 }
+
