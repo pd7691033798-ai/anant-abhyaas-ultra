@@ -694,7 +694,7 @@ func remediationStatusHandler(w http.ResponseWriter, r *http.Request) {
 // ==========================================
 
 func main() {
-	fmt.Println("Anant Abhyaas Ultra Master Engine starting on http://localhost:8080...")
+	fmt.Println("Anant Abhyaas Ultra Master Engine starting...")
 
 	// 39 डायरेक्टिव्स लोड करना
 	engine.Directives = init39Directives()
@@ -721,16 +721,14 @@ func main() {
 	// बैकग्राउंड ऑटोनॉमस मॉनिटर स्टार्ट करना
 	go engine.StartAutonomousMonitor(5 * time.Second)
 
-	// मास्टर इंजन और बटन-बेस्ड डैशबोर्ड सर्वर लॉन्च करना (यह सारे एंडपॉइंट्स और UI संभाल लेगा)
+	// सर्वर रूट्स/UI इनिशियलाइज करना
 	engine.StartServer()
-}
 
+	// पोर्ट सेट करके सर्वर लाइव करना (यह सब अब इसी फंक्शन के *अंदर* सुरक्षित है)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-
-	go engine.StartAutonomousMonitor(5 * time.Second)
 
 	log.Printf("🌐 'अनंत अभ्यास अल्ट्रा' मास्टर सर्वर http://0.0.0.0:%s पर सक्रिय है...\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
