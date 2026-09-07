@@ -696,16 +696,15 @@ func remediationStatusHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	fmt.Println("Anant Abhyaas Ultra Master Engine starting...")
 
-	// 39 डायरेक्टिव्स लोड करना (यदि init39Directives स्ट्रिंग रिटर्न नहीं कर रहा, तो इसे सीधे असाइन करने के बजाय core.go में Directives को []any या []string पर सेट करें)
-	// जेनेसिस ब्लॉक
-	engine2.AddAuditLog("GENESIS: Anant Abhyaas Ultra System Initialized with 39 Master Directives")
-	engine2.Lock()
-	engine2.TrustedGenesis = engine2.BlockchainLedger[0] // .Hash हटा दिया है क्योंकि यह स्ट्रिंग है
-	engine2.BlockchainIntegrity = "BLOCKCHAIN_INTEGRITY_VERIFIED"
-	engine2.AutonomousMonitorLive = true
-	engine2.Unlock()
+	// 1. जेनेसिस ब्लॉक सेट करना (यहाँ सही 'engine' वेरिएबल का इस्तेमाल किया गया है)
+	engine.AddAuditLog("GENESIS: Anant Abhyaas Ultra System Initialized with 39 Master Directives")
+	engine.Lock()
+	engine.TrustedGenesis = engine.BlockchainLedger[0]
+	engine.BlockchainIntegrity = "BLOCKCHAIN_INTEGRITY_VERIFIED"
+	engine.AutonomousMonitorLive = true
+	engine.Unlock()
 
-	// क्लाउड कंप्यूटिंग टास्क
+	// 2. क्लाउड कंप्यूटिंग टास्क
 	cloudTasks := []string{
 		"Directive #02: Android 12+ (API 31-35) Matrix Enforcement",
 		"Directive #05: Secrets & Military Shield Verification",
@@ -714,18 +713,26 @@ func main() {
 		"Directive #27: Zero-Trust Network Encryption",
 		"Directive #39: Telemetry Sentinel Monitoring",
 	}
-	engine2.CloudWorkerPool(cloudTasks)
+	engine.CloudWorkerPool(cloudTasks)
 
-	// बैकग्राउंड ऑटोनॉमस मॉनिटर स्टार्ट करना
-	go engine2.StartAutonomousMonitor(5 * time.Second)
+	// 3. बैकग्राउंड ऑटोनॉमस मॉनिटर स्टार्ट करना
+	go engine.StartAutonomousMonitor(5 * time.Second)
 
-	// सर्वर रूट्स/UI इनिशियलाइज करना
-	engine2.StartServer()
+	// 4. सभी HTTP राउट्स यहाँ रजिस्टर करें (ताकि सर्वर पर 404 या त्रुटि न आए)
+	http.HandleFunc("/", dashboardHandler)
+	http.HandleFunc("/version", versionHandler)
+	http.HandleFunc("/admin/handshake", adminHandshakeHandler)
+	http.HandleFunc("/code/verify", verifyCodeHandler)
+	http.HandleFunc("/admin/approve", adminApproveHandler)
+	http.HandleFunc("/emergency/recovery", emergencyRecoveryHandler)
+	http.HandleFunc("/api/directives", apiDirectivesHandler)
+	http.HandleFunc("/api/logs", apiLogsHandler)
+	http.HandleFunc("/api/remediation/status", remediationStatusHandler)
 
-	// पोर्ट सेट करके सर्वर लाइव करना
+	// 5. पोर्ट सेट करके सर्वर लाइव करना (Render के लिए PORT एनवायरनमेंट वेरिएबल)
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8080" // लोकल टेस्टिंग के लिए डिफ़ॉल्ट
 	}
 
 	log.Printf("🌐 'अनंत अभ्यास अल्ट्रा' मास्टर सर्वर http://0.0.0.0:%s पर सक्रिय है...\n", port)
@@ -733,4 +740,5 @@ func main() {
 		log.Fatalf("Server launch failed: %v", err)
 	}
 }
+
 
