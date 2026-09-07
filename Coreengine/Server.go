@@ -115,7 +115,7 @@ func StartServer() {
 			return
 		}
 
-		result := Runpipeline(BuildJob{
+		result := RunPipeline(BuildJob{
 			ProjectName: p.ProjectName,
 			RepoURL:     p.RepoURL,
 			Version:     p.Version,
