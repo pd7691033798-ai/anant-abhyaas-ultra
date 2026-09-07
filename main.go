@@ -13,7 +13,7 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"my-project/coreEngine"
+	"my-project/coreengine"
 	
 )
 
@@ -697,12 +697,12 @@ func main() {
 	fmt.Println("Anant Abhyaas Ultra Master Engine starting...")
 
 	// 1. जेनेसिस ब्लॉक सेट करना (coreEngine का इस्तेमाल करते हुए)
-	coreEngine.AddAuditLog("GENESIS: Anant Abhyaas Ultra System Initialized with 39 Master Directives")
-	coreEngine.Lock()
-	coreEngine.TrustedGenesis = coreEngine.BlockchainLedger[0]
-	coreEngine.BlockchainIntegrity = "BLOCKCHAIN_INTEGRITY_VERIFIED"
-	coreEngine.AutonomousMonitorLive = true
-	coreEngine.Unlock()
+	coreengine.AddAuditLog("GENESIS: Anant Abhyaas Ultra System Initialized with 39 Master Directives")
+	coreengine.Lock()
+	coreengine.TrustedGenesis = coreengine.BlockchainLedger[0]
+	coreengine.BlockchainIntegrity = "BLOCKCHAIN_INTEGRITY_VERIFIED"
+	coreengine.AutonomousMonitorLive = true
+	coreengine.Unlock()
 
 	// 2. क्लाउड कंप्यूटिंग टास्क
 	cloudTasks := []string{
@@ -713,10 +713,10 @@ func main() {
 		"Directive #27: Zero-Trust Network Encryption",
 		"Directive #39: Telemetry Sentinel Monitoring",
 	}
-	coreEngine.CloudWorkerPool(cloudTasks)
+	coreengine.CloudWorkerPool(cloudTasks)
 
 	// 3. बैकग्राउंड ऑटोनॉमस मॉनिटर स्टार्ट करना
-	go coreEngine.StartAutonomousMonitor(5 * time.Second)
+	go coreengine.StartAutonomousMonitor(5 * time.Second)
 
 	// 4. सभी HTTP राउट्स यहाँ रजिस्टर करें (ताकि सर्वर पर 404 या त्रुटि न आए)
 	http.HandleFunc("/", dashboardHandler)
