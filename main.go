@@ -13,7 +13,7 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"my-project/coreengine"
+coreengine "my-project/coreengine"
 	
 )
 
